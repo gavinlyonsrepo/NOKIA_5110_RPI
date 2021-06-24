@@ -3,9 +3,7 @@ Table of contents
 
   * [Overview](#overview)
   * [Installation](#installation)
-  * [Hardware](#hardware)
   * [Features](#features)
-  * [Output](#output)
 
 Overview
 --------------------------------------------
