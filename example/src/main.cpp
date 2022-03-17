@@ -1,6 +1,6 @@
 /*
  * Project Name:  PCD8544 Nokia 5110 SPI LCD display Library
- * File: main.c
+ * File: main.cpp
  * Description: library test file
  * Author: Gavin Lyons.
  * Created June 2021

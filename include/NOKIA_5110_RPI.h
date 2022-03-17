@@ -1,5 +1,5 @@
 /*
-* Project Name: Nokia  5110 Graphic library for PIC  micro-controller
+* Project Name: Nokia  5110  library 
 * Description: Header file for NOKIA 5110 library to communicate with LCD
 * Controls SPI and basic functionality 
 * Author: Gavin Lyons.

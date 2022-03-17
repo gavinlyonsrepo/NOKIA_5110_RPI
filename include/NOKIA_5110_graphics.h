@@ -1,4 +1,10 @@
-
+/*
+* Project Name: NOKIA_5110_RPI
+* File: NOKIA_5110_graphics.h
+* Description: header file for the custom graphics functions
+* Author: Gavin Lyons.
+* URL: https://github.com/gavinlyonsrepo/NOKIA_5110_RPI
+*/
 
 #ifndef _NOKIA_5110_graphics_h
 #define _NOKIA_5110_graphics_h

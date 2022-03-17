@@ -1,8 +1,6 @@
 /*
-* Project Name: Nokia  5110 Graphic library for PIC  micro-controller
+* Project Name: Nokia  5110  library 
 * Description: Source file for NOKIA 5110 library to communicate with LCD
-* Author: Gavin Lyons.
-* Created: July 2021
 * Description: See URL for full details.
 * URL: https://github.com/gavinlyonsrepo/NOKIA_5110_RPI
 */
