@@ -20,10 +20,10 @@ LIBNAME=$(LIB).so.1.0
 MD=mkdir
 SRC=src
 OBJ=obj
-SRCS = $(wildcard $(SRC)/*.c)
-OBJS = $(patsubst $(SRC)%.c,  $(OBJ)/%.o, $(SRCS))
+SRCS = $(wildcard $(SRC)/*.cpp)
+OBJS = $(patsubst $(SRC)%.cpp,  $(OBJ)/%.o, $(SRCS))
 
-CC=gcc
+CC=g++
 CFLAGS= -Ofast -mfpu=vfp -mfloat-abi=hard -march=armv6zk -mtune=arm1176jzf-s -Iinclude/
 LDFLAGS= -lbcm2835
 
@@ -43,7 +43,7 @@ NOKIA_5110_RPI: $(OBJS)
 	$(CC) -shared -Wl,-soname,$(LIB).so.1 $(CFLAGS) $(LDFLAGS)  -o ${LIBNAME} $^
 
 # Library parts
-$(OBJ)/%.o: $(SRC)/%.c
+$(OBJ)/%.o: $(SRC)/%.cpp
 	$(CC) -Wall -fPIC -c $(CFLAGS) $< -o $@
 
 # Install the library to LIBPATH
@@ -62,6 +62,8 @@ install:
 	@echo "[INSTALL HEADERS]"
 	@if ( test ! -d $(PREFIX)/include ) ; then mkdir -p $(PREFIX)/include ; fi
 	@cp -vf  include/NOKIA_5110_RPI.h $(PREFIX)/include
+	@cp -vf  include/NOKIA_5110_graphics.h $(PREFIX)/include
+	@cp -vf  include/NOKIA_5110_Print.h $(PREFIX)/include
 	@cp -vf  include/NOKIA_5110_RPI_Font.h $(PREFIX)/include
 	@echo "[DONE!]"
 
@@ -73,6 +75,8 @@ uninstall:
 
 	@echo "[UNINSTALL HEADERS]"
 	@rm -rvf  $(PREFIX)/include/NOKIA_5110_RPI.h
+	@rm -rvf  $(PREFIX)/include/NOKIA_5110_graphics.h
+	@rm -rvf  $(PREFIX)/include/NOKIA_5110_Print.h
 	@rm -rvf  $(PREFIX)/include/NOKIA_5110_RPI_Font.h
 	@echo "[DONE!]"
 

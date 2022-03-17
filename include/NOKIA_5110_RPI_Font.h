@@ -1,11 +1,13 @@
-// File to store fonts 
+// File to store fonts for project 
+// https://github.com/gavinlyonsrepo/NOKIA_5110_RPI
+// Five fonts here.
 
-#ifndef _FONT_NOKIA_H
-#define _FONT_NOKIA_H
+#ifndef _FONTFILE_NOKIA_H
+#define _FONTFILE_NOKIA_H
 
 // Default Font number 1
 // Standard ASCII 5x7 bit pixel font 0x00 <-> 0xFF
-static const char Font_One[] = {
+static const char FontDefault[] = {
    0x00, 0x00, 0x00, 0x00, 0x00,
    0x3E, 0x5B, 0x4F, 0x5B, 0x3E,
    0x3E, 0x6B, 0x4F, 0x6B, 0x3E,
@@ -268,7 +270,7 @@ static const char Font_One[] = {
 // ASCII font file : "Thick" Font 7 by 8 
 // NO LOWERCASE LETTERS
 
-static const char Font_Two[] = {
+static const char FontThick[] = {
 	0x00,0x00,0x00,0x00,0x00,0x00,0x00, //  
 	0x5f,0x5f,0x00,0x00,0x00,0x00,0x00, // !
 	0x07,0x07,0x00,0x07,0x07,0x00,0x00, // "
@@ -334,7 +336,7 @@ static const char Font_Two[] = {
 // ASCII font file : "Seven Segment" 4 by 8 
 // Define the ASCII table as Data array
 
-static const  char Font_Three[] = {
+static const  char FontSevenSeg[] = {
 	0x00,0x00,0x00,0x00, //  
 	0x00,0x36,0x00,0x00, // !
 	0x06,0x00,0x00,0x06, // "
@@ -432,7 +434,7 @@ static const  char Font_Three[] = {
 // ASCII font file : "Wide" font 8 by 8 
 // Define the ASCII table as Data array
 // NO LOWERCASE LETTERS
-static const  char Font_Four[]  = {
+static const  char FontWide[]  = {
 	0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, //  
 	0x00,0x00,0x00,0x5F,0x00,0x00,0x00,0x00, // !
 	0x00,0x03,0x00,0x03,0x00,0x00,0x00,0x00, // "
@@ -497,7 +499,7 @@ static const  char Font_Four[]  = {
 // tiny Font number 5
 // ASCII font file : tiny 3 by 8 
 // Define the ASCII table as Data array
-static const char Font_Five[] = {
+static const char FontTiny[] = {
 	0x00,0x00,0x00, //  
 	0x00,0x2e,0x00, // !
 	0x06,0x00,0x06, // "

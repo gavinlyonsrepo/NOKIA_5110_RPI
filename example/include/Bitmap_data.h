@@ -1,4 +1,5 @@
-// Data file to hold bitmap data
+// Data file to hold bitmap data used by example file for testing
+// Project URL : https://github.com/gavinlyonsrepo/NOKIA_5110_RPI
 
 #ifndef _BITMAP_DATA_LCD_H
 #define _BITMAP_DATA_LCD_H
