@@ -1,7 +1,7 @@
 /*
  * Project Name:  PCD8544 Nokia 5110 SPI LCD display Library
  * File: main.cpp
- * Description: library test file
+ * Description: library test file, carries out series of tests , HW SPI
  * Author: Gavin Lyons.
  * Created June 2021
  * Description: See URL for full details.
@@ -12,25 +12,26 @@
 #include <bcm2835.h> // for SPI, GPIO and delays. airspayce.com/mikem/bcm2835/index.html
 #include <iostream> // for std::cout
 
-#include "NOKIA_5110_RPI.h" // PCD8544 controller driver
-#include "Bitmap_data.h" // Data for bitmap tests
+#include "NOKIA_5110_RPI.hpp" // PCD8544 controller driver
+#include "Bitmap_data.hpp" // Data for bitmap tests
 
 // *********** Test setup Defines **************
 #define TEST_DELAY1 1000
 #define TEST_DELAY2 2000
 #define TEST_DELAY5 5000
-#define CONTRAST  0x30 // 0x30 to 0x3F possible values
 
 // **************** GPIO ***************
-#define  RST_LCD 25
+#define RST_LCD 25
 #define DC_LCD 24
-#ifndef LCD_SPI_HARDWARE
-	#define SCLK_LCD 11
-	#define SDIN_LCD 27
-	#define CS_LCD 8
-#endif
 
-NOKIA_5110_RPI myLCD;
+#define inverse  false // set to true to invert display pixel color
+#define contrast 0xB2 // default is 0xBF set in LCDinit, Try 0xB1 <-> 0xBF if your display is too dark/dim
+#define bias 0x13 // LCD bias mode 1:48: Try 0x12 or 0x13 or 0x14
+
+const uint32_t SPICLK_FREQ = 64; // Spi clock divider see bcm2835SPIClockDivider enum bcm2835
+const uint8_t SPI_CE_PIN = 0; // which HW SPI chip enable pin to use,  0 or 1
+
+NOKIA_5110_RPI myLCD(RST_LCD, DC_LCD);
 
 // ************ Function Headers ****************
 void Setup(void);
@@ -52,6 +53,7 @@ void testFillRoundRect(void);
 void testRotate(void);
 void testTextModes(void);
 void testFonts(void);
+void testFontsNum(void);
 void testBitmapInvert(void);
 
 void EndTests(void);
@@ -67,9 +69,11 @@ int main(void)
 	}
 	
 	Setup(); // 0. Includes "splash screen" full size bitmap test, test0 
+
 	textDrawPixel(); //    1. Draw Pixels
 	testFillScreen(); //   1b. Fill screen
 	testSleepMode(); //    1c. sleep mode
+	
 	testDrawLine(); //     2. Draw lines
 	testDrawRect(); //     3. Draw rectangle
 	testFillRect(); //     4. Draw filled rectangle
@@ -79,12 +83,14 @@ int main(void)
 	testFillRoundRect(); // 8. Fill a rounded rectangle
 	testDrawTriangle(); //  9. Draw a triangle
 	testFillTriangle(); // 10. Fill a triangle
-	testDrawChar(); //     11.  draw the  ASCII font default 0-255
-					//			+ Custom character + drawChar().
-	testFonts();    //      11b. test different fonts 1-5
-	testTextModes(); //     12. Text display tests, test print functions and puts
+	
+	testDrawChar(); //     11.  draw the ASCII font default 0-255
+					//		+ Custom character + drawChar() + drawText()
+	testFonts();    //      11b. test different fonts 1-6
+	testFontsNum(); //      11c. test font 7-8 numerical fonts.
+	testTextModes(); //     12. Text display tests, test print functions
+	
 	testRotate(); //        13. Rotation example
-
 	testBitmapInvert(); // 14. Miniature bitmap display
 					   //  15. Invert the display
 	EndTests();
@@ -99,18 +105,12 @@ int main(void)
 
 void Setup(void)
 {
-	bcm2835_delay(TEST_DELAY1);
+	bcm2835_delay(250);
 	std::cout << "LCD Start\r\n" ;
-#ifndef LCD_SPI_HARDWARE
-	myLCD.LCDBegin(RST_LCD, DC_LCD ,CS_LCD , SCLK_LCD, SDIN_LCD);
-#else
-	myLCD.LCDBegin(RST_LCD, DC_LCD,-1 , -1, -1);
-#endif
-	myLCD.LCDSetContrast(CONTRAST);
+	myLCD.LCDBegin(inverse, contrast, bias, SPICLK_FREQ, SPI_CE_PIN);
 	myLCD.LCDdisplayClear();
-	myLCD.LCDdisplayUpdate();
-	bcm2835_delay(TEST_DELAY1);
-	myLCD.display_drawBitmapV2(0,0, customBitmap, 84, 48, LCD_BLACK); // Splashscreen
+	bcm2835_delay(250);
+	myLCD.drawBitmap(0,0, customBitmap, 84, 48, LCD_BLACK); // Splashscreen
 	myLCD.LCDdisplayUpdate();
 	bcm2835_delay(TEST_DELAY2);
 	screenReset();
@@ -119,9 +119,8 @@ void Setup(void)
 
 void EndTests(void)
 {
-#ifdef LCD_SPI_HARDWARE
+
 	myLCD.LCDSPIoff(); //Stop the hardware SPI
-#endif
 	myLCD.LCDPowerDown(); // Power down device
 	bcm2835_close(); // Close the bcm2835 library
 	std::cout << "LCD End\r\n";
@@ -133,75 +132,79 @@ void testFonts(void)
 	char testStr2[]= "size2";
 	char testStr3[]= "s3";
 	
+	char testStr5[]= "123";
 	char testStr4[]= "THICK 2082";
-	char testStr5[]= "TH7";
-	
 	char testStr6[]= "Seven Seg 1273";
-	char testStr7[]= "887";
-	
 	char testStr8[]= "WIDE 9337";
-	char testStr9[]= "WIDE";
-	
-	char testStr10[]= "TINY 1837";
-	char testStr11[]= "tiny font";
+	char testStr10[]= "Tiny 1837";
+	char testStr12[]= "Homespun";
 	
 	// default font 1
-	myLCD.display_SetFontNum(LCDFont_Default);
-	myLCD.display_setTextSize(1);
-	myLCD.display_setCursor(0, 0);
-	myLCD.display_puts(testStr1);
-	myLCD.display_setTextSize(2);
-	myLCD.display_setCursor(0,9);
-	myLCD.display_puts(testStr2);
-	myLCD.display_setTextSize(3);
-	myLCD.display_setCursor(0,25);
-	myLCD.display_puts(testStr3);
+	myLCD.SetFontNum(LCDFontType_Default);
+	myLCD.setTextSize(1);
+	myLCD.setCursor(0, 0);
+	myLCD.print(testStr1);
+	myLCD.setTextSize(2);
+	myLCD.setCursor(0,9);
+	myLCD.print(testStr2);
+	myLCD.setTextSize(3);
+	myLCD.setCursor(0,25);
+	myLCD.print(testStr3);
 	screenReset();
 
 	// THICK font 2
-	myLCD.display_setCursor(0, 0);
-	myLCD.display_setTextSize(1);
-	myLCD.display_SetFontNum(LCDFont_Thick);
-	myLCD.display_puts(testStr4);
-	myLCD.display_setTextSize(2);
-	myLCD.display_setCursor(10, 20);
-	myLCD.display_puts(testStr5);
+	myLCD.setCursor(0, 0);
+	myLCD.setTextSize(1);
+	myLCD.SetFontNum(LCDFontType_Thick);
+	myLCD.print(testStr4);
+	myLCD.setTextSize(2);
+	myLCD.setCursor(10, 20);
+	myLCD.print(testStr5);
 	screenReset();
 
 	// Seven seg font 3
-	myLCD.display_SetFontNum(LCDFont_Seven_Seg);
-	myLCD.display_setTextSize(1);
-	myLCD.display_setCursor(0, 12);
-	myLCD.display_puts(testStr6);
-	myLCD.display_setTextSize(2);
-	myLCD.display_setCursor(10, 20);
-	myLCD.display_puts(testStr7);
+	myLCD.SetFontNum(LCDFontType_SevenSeg);
+	myLCD.setTextSize(1);
+	myLCD.setCursor(0, 12);
+	myLCD.print(testStr6);
+	myLCD.setTextSize(2);
+	myLCD.setCursor(10, 20);
+	myLCD.print(testStr5);
 	screenReset();
 
 	// WIDE  font 4
-	myLCD.display_SetFontNum(LCDFont_Wide);
-	myLCD.display_setTextSize(1);
-	myLCD.display_setCursor(0, 0);
-	myLCD.display_puts(testStr8);
-	myLCD.display_setTextSize(2);
-	myLCD.display_setCursor(10, 20);
-	myLCD.display_puts(testStr9);
+	myLCD.SetFontNum(LCDFontType_Wide);
+	myLCD.setTextSize(1);
+	myLCD.setCursor(0, 0);
+	myLCD.print(testStr8);
+	myLCD.setTextSize(2);
+	myLCD.setCursor(10, 20);
+	myLCD.print(testStr5);
 	screenReset();
-
 
 	//tiny font 5
-	myLCD.display_SetFontNum(LCDFont_Tiny);
-	myLCD.display_setTextSize(1);
-	myLCD.display_setCursor(0, 0);
-	myLCD.display_puts(testStr10);
-	myLCD.display_setTextSize(2);
-	myLCD.display_setCursor(10, 20);
-	myLCD.display_puts(testStr11);
+	myLCD.SetFontNum(LCDFontType_Tiny);
+	myLCD.setTextSize(1);
+	myLCD.setCursor(0, 0);
+	myLCD.print(testStr10);
+	myLCD.setTextSize(2);
+	myLCD.setCursor(10, 20);
+	myLCD.print(testStr5);
+	screenReset();
+	
+	//homespun font 6
+	myLCD.SetFontNum(LCDFontType_Homespun);
+	myLCD.setTextSize(1);
+	myLCD.setCursor(0, 0);
+	myLCD.print(testStr12);
+	myLCD.setTextSize(2);
+	myLCD.setCursor(10, 23);
+	myLCD.print(testStr5);
 	screenReset();
 
-	myLCD.display_setTextSize(1);
-	myLCD.display_SetFontNum(LCDFont_Default);
-	myLCD.display_setCursor(0, 0);
+	myLCD.setTextSize(1);
+	myLCD.SetFontNum(LCDFontType_Default);
+	myLCD.setCursor(0, 0);
 }
 
 
@@ -212,9 +215,9 @@ void testSleepMode(void) {
 	char testStr2[]= "Awake!\r\n";
 	
 	myLCD.LCDdisplayClear();
-	myLCD.display_setCursor(0, 0);
-	myLCD.display_setTextSize(1);
-	myLCD.display_puts(testStr1);
+	myLCD.setCursor(0, 0);
+	myLCD.setTextSize(1);
+	myLCD.print(testStr1);
 	myLCD.LCDdisplayUpdate();
 	
 	bcm2835_delay(TEST_DELAY2);
@@ -222,9 +225,8 @@ void testSleepMode(void) {
 	bcm2835_delay(TEST_DELAY5);
 	myLCD.LCDdisableSleep();
 	
-	myLCD.display_puts(testStr2);
+	myLCD.print(testStr2);
 	myLCD.LCDdisplayUpdate();
-	myLCD.LCDSetContrast(CONTRAST); // reset contrast after sleep
 	bcm2835_delay(TEST_DELAY2);
 	screenReset();
 }
@@ -232,33 +234,44 @@ void testSleepMode(void) {
 
 void testTextModes(void) {
 
-	char testStr1[]= "Hello world!\r\n";
+	char testStr1[]= "Hello World!\r\n";
 	char testStr2[]= "0xABCD";
-	char testStr3[]= "21:34\r\n";
+	char testStr3[]= "20:37\r\n";
 	
 	// text display tests
-	myLCD.display_setTextSize(1);
-	myLCD.display_setTextColor(LCD_WHITE, LCD_BLACK); // 'inverted' text
-	myLCD.display_setCursor(0, 0);
-	myLCD.display_puts(testStr1);
+	myLCD.setTextSize(1);
+	myLCD.SetFontNum(LCDFontType_Default);
+	myLCD.setTextColor(LCD_WHITE, LCD_BLACK); // 'inverted' text
+	myLCD.setCursor(0, 0);
+	myLCD.print(testStr1);
 	myLCD.print(3.141592, 4); // prints 3.1416
-	myLCD.display_setCursor(0, 24);
-	myLCD.display_setTextSize(2);
-	myLCD.display_setTextColor(LCD_BLACK, LCD_WHITE);
+	myLCD.setCursor(0, 24);
+	myLCD.setTextSize(2);
+	myLCD.setTextColor(LCD_BLACK, LCD_WHITE);
 	myLCD.print(testStr2);
-	myLCD.LCDdisplayUpdate();
-	bcm2835_delay(TEST_DELAY5);
 	
-	myLCD.LCDdisplayClear();
-	myLCD.display_setCursor(0, 0);
-	myLCD.display_setTextSize(1);
-	myLCD.display_SetFontNum(LCDFont_Wide);
-	myLCD.display_puts(testStr3);
+	screenReset();
+	
+	myLCD.setCursor(0, 0);
+	myLCD.setTextSize(1);
+	myLCD.SetFontNum(LCDFontType_Wide);
+	myLCD.print(testStr3);
 	myLCD.print(-14790);
-	myLCD.display_setCursor(0, 26);
+	myLCD.setCursor(0, 26);
 	myLCD.print(83.6);
-	myLCD.LCDdisplayUpdate();
-	bcm2835_delay(TEST_DELAY5);
+	
+	screenReset();
+	
+	myLCD.setCursor(0, 0);
+	myLCD.print(47 , DEC); // print 47 
+	myLCD.setCursor(0, 9);
+	myLCD.print(47 , HEX);  // print 2F
+	myLCD.setCursor(0, 19);
+	myLCD.print(47, BIN); // print 101111
+	myLCD.setCursor(0, 30);
+	myLCD.print(47 , OCT); // print 57
+	
+	screenReset();
 }
 
 
@@ -270,26 +283,26 @@ void testRotate(void) {
 	
 	// rotation example 
 	myLCD.LCDdisplayClear();
-	myLCD.display_setTextSize(1);
-	myLCD.display_SetFontNum(LCDFont_Tiny); //tiny
-	myLCD.display_setTextColor(LCD_BLACK, LCD_WHITE);
-	myLCD.display_setCursor(0, 0);
+	myLCD.setTextSize(1);
+	myLCD.SetFontNum(LCDFontType_Tiny); //tiny
+	myLCD.setTextColor(LCD_BLACK, LCD_WHITE);
+	myLCD.setCursor(0, 0);
 	
 	myLCD.LCDsetRotation(LCD_Degrees_90); // rotate 90 degrees counter clockwise,
 	myLCD.LCDdisplayClear();
-	myLCD.display_puts(testStr1);
+	myLCD.print(testStr1);
 	myLCD.LCDdisplayUpdate();
 	bcm2835_delay(TEST_DELAY5);
 	
 	myLCD.LCDsetRotation(LCD_Degrees_180); // rotate 180 degrees counter clockwise,
 	myLCD.LCDdisplayClear();
-	myLCD.display_puts(testStr2);
+	myLCD.print(testStr2);
 	myLCD.LCDdisplayUpdate();
 	bcm2835_delay(TEST_DELAY5);
 	
 	myLCD.LCDsetRotation(LCD_Degrees_270); // rotate 180 degrees counter clockwise,
 	myLCD.LCDdisplayClear();
-	myLCD.display_puts(testStr3);
+	myLCD.print(testStr3);
 	myLCD.LCDdisplayUpdate();
 	bcm2835_delay(TEST_DELAY5);
 	
@@ -313,88 +326,100 @@ void testDrawChar(void) {
 
 	char i;
 	const uint8_t mycustomchar[] = {0xFF,0x00,0xFF,0x00,0xFF,0x00,0xFF,0x00};
-	myLCD.display_setTextSize(1);
-	myLCD.display_setTextColor(LCD_BLACK, LCD_WHITE);
-	myLCD.display_setCursor(0, 0);
-	myLCD.display_setTextWrap(true);
+	myLCD.setTextSize(1);
+	myLCD.setTextColor(LCD_BLACK, LCD_WHITE);
+	myLCD.setCursor(0, 0);
+	myLCD.setTextWrap(true);
+	
 	for (i = 0; i < 83; i++)
 	{
 		if (i == '\n' || i == '\r') continue;
-		myLCD.display_putc(i);
+		myLCD.print(i);
 	}
 	screenReset();
-	myLCD.display_setCursor(0, 0);
+	
+	myLCD.setCursor(0, 0);
 	for (i = 84; i < 168; i++)
 	{
 		if (i == '\n' || i == '\r') continue;
-		myLCD.display_putc(i);
+		myLCD.print(i);
 	}
 	screenReset();
-	myLCD.display_setCursor(0, 0);
+	
+	myLCD.setCursor(0, 0);
 	for (i = 168; i < 250; i++)
 	{
 		if (i == '\n' || i == '\r') continue;
-		myLCD.display_putc(i);
+		myLCD.print(i);
 	}
 	screenReset();
-	bcm2835_delay(TEST_DELAY2);
-	myLCD.display_setCursor(0, 0);
-	myLCD.display_customChar(mycustomchar); // '|||'
-	myLCD.display_setCursor(40, 20);
-	myLCD.display_drawChar(40, 20 ,'A', 1, 0, 1);
-	myLCD.display_drawChar(5, 30 ,'B', 0, 1, 1); // color inverted 
+
+	myLCD.setCursor(0, 0);
+	myLCD.customChar(mycustomchar); // '|||'
+	myLCD.setCursor(40, 20);
+	myLCD.drawChar(40, 20 ,'A', 1, 0, 1);
+	myLCD.drawChar(5, 30 ,'B', 0, 1, 1); // color inverted 
+	
+	screenReset();
+	
+	char myString1[9] = {'1', '2', ':', '1', '3', ':', '2', '9'};
+	myLCD.SetFontNum(LCDFontType_Tiny);
+	myLCD.drawText(0,0, myString1, LCD_WHITE, LCD_BLACK,1);
+	myLCD.SetFontNum(LCDFontType_Wide);
+	myLCD.drawText(0,32, myString1, LCD_BLACK, LCD_WHITE,1);
+	
 	screenReset();
 }
 
 void testdrawcircle(void) {
 
-	myLCD.display_drawCircle(20, 20, 10, LCD_BLACK);
+	myLCD.drawCircle(20, 20, 10, LCD_BLACK);
 	screenReset();
 }
 
 void testfillcircle(void)
 {
-	myLCD.display_fillCircle(60, 20, 10, LCD_BLACK);
+	myLCD.fillCircle(60, 20, 10, LCD_BLACK);
 	screenReset();
 }
 
 void testFillRect(void) {
 
-	myLCD.display_fillRect(0, 20, 10, 30, LCD_BLACK);
+	myLCD.fillRect(0, 20, 10, 30, LCD_BLACK);
 	screenReset();
 }
 
 void testDrawTriangle(void) {
-	myLCD.display_drawTriangle(30, 20, 50, 5, 80, 20, LCD_BLACK);
+	myLCD.drawTriangle(30, 20, 50, 5, 80, 20, LCD_BLACK);
 	screenReset();
 }
 
 void testFillTriangle(void) {
 
-	myLCD.display_fillTriangle(10, 20, 40, 5, 80, 20, LCD_BLACK);
+	myLCD.fillTriangle(10, 20, 40, 5, 80, 20, LCD_BLACK);
 	screenReset();
 }
 
 void testDrawRoundRect(void) {
-	myLCD.display_drawRoundRect(20, 20, 15 , 15, 5, LCD_BLACK);
+	myLCD.drawRoundRect(20, 20, 15 , 15, 5, LCD_BLACK);
 	screenReset();
 }
 
 void testFillRoundRect(void) {
-	myLCD.display_fillRoundRect(60, 20, 15, 15, 5, LCD_BLACK);
+	myLCD.fillRoundRect(60, 20, 15, 15, 5, LCD_BLACK);
 	screenReset();
 }
 
 void testDrawRect(void) {
-	myLCD.display_drawRect(20, 15, 20, 15, LCD_BLACK);
+	myLCD.drawRect(20, 15, 20, 15, LCD_BLACK);
 	screenReset();
 }
 
 void testDrawLine(void) {
 
-	myLCD.display_drawLine(0, 0, 40, 20, LCD_BLACK);
-	myLCD.display_drawHLine(50, 20, 10 , LCD_BLACK); 
-	myLCD.display_drawVLine(70, 20 ,10, LCD_BLACK); 
+	myLCD.drawLine(0, 0, 40, 20, LCD_BLACK);
+	myLCD.drawHLine(50, 20, 10 , LCD_BLACK); 
+	myLCD.drawVLine(70, 20 ,10, LCD_BLACK); 
 	screenReset();
 }
 
@@ -413,7 +438,9 @@ void testBitmapInvert(void)
 {
 	// Miniature bitmap display
 	myLCD.LCDdisplayClear();
-	myLCD.display_drawBitmapV2(30, 16, smallImage, 20, 20, LCD_BLACK);
+	myLCD.drawBitmap(5, 5, SignalIcon, 16, 8, LCD_BLACK);
+	myLCD.drawBitmap(30, 5, MsgIcon, 16, 8, LCD_BLACK);
+	myLCD.drawBitmap(60, 5, BatIcon, 16, 8, LCD_BLACK);
 	myLCD.LCDdisplayUpdate();
 
 	// Invert the display
@@ -421,5 +448,39 @@ void testBitmapInvert(void)
 	bcm2835_delay(TEST_DELAY2);
 	myLCD.LCDinvertDisplay(false);
 	bcm2835_delay(TEST_DELAY2);
+}
+
+void testFontsNum(void)
+{
+	char mytest[] = "23";
+	
+	// Font 7 723 
+	myLCD.SetFontNum(LCDFontType_Bignum);
+	myLCD.drawCharNumFont(0, 0, '7', LCD_WHITE, LCD_BLACK); // single character
+	myLCD.drawTextNumFont(20, 0, mytest, LCD_WHITE, LCD_BLACK);
+	screenReset();
+	
+	// Font 8 823
+	myLCD.SetFontNum(LCDFontType_Mednum);
+	myLCD.drawCharNumFont(0, 0, '8', LCD_WHITE, LCD_BLACK); // single character
+	myLCD.drawTextNumFont(20, 0, mytest, LCD_BLACK, LCD_WHITE);
+	screenReset();
+	
+	// Font 7-8 with print
+	myLCD.setTextColor(LCD_BLACK, LCD_WHITE);
+	myLCD.SetFontNum(LCDFontType_Bignum);
+	myLCD.setCursor(0, 0);
+	myLCD.print(8.3, 1);
+	screenReset();
+	
+	myLCD.SetFontNum(LCDFontType_Mednum);
+	myLCD.setCursor(0, 0);
+	myLCD.print(3.947, 2); // prints 3.95
+	screenReset();
+	
+	myLCD.SetFontNum(LCDFontType_Mednum);
+	myLCD.setCursor(0, 0);
+	myLCD.print(-39); 
+	screenReset();
 }
 // *************** EOF ****************

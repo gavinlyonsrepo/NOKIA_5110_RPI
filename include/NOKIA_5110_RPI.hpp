@@ -18,15 +18,10 @@
 #include <stdio.h> 
 #include <bcm2835.h>
 
-#include "NOKIA_5110_graphics.h"
+#include "NOKIA_5110_graphics.hpp"
 
 //*********** Definitions **************
 
-// ******** USER OPTION 1 SPI TYPE ***********
-// SPI LCD module connections
-// *** If software SPI module is used, comment this line OUT ***
-#define LCD_SPI_HARDWARE
-// *******************************************
 
 #define LCD_BLACK 1
 #define LCD_WHITE 0
@@ -52,7 +47,10 @@
 #define LCD_SETBIAS  0x13
 #define LCD_SETVOP   0x80
 
-#define LCD_HIGHFREQ_DELAY 2 // uS used in SW SPI
+#define LCD_CONTRAST 0xB0
+#define LCD_BIAS 0x13
+
+#define LCD_HIGHFREQ_DELAY 2 // uS delay ,used in SW SPI
 
 // GPIO 
 #define LCD_DC_SetHigh  bcm2835_gpio_write(_LCD_DC, HIGH)
@@ -88,13 +86,15 @@ class NOKIA_5110_RPI : public NOKIA_5110_graphics
 
 public:
 
-	NOKIA_5110_RPI();
+	NOKIA_5110_RPI(uint8_t LCD_RST, uint8_t LCD_DC, uint8_t LCD_CE, int8_t LCD_DIN, int8_t LCD_CLK);
+	NOKIA_5110_RPI(uint8_t LCD_RST, uint8_t LCD_DC);
 	~NOKIA_5110_RPI(){};
 	
-	void LCDBegin(int8_t, int8_t, int8_t, int8_t, int8_t);
+	void LCDBegin(bool Inverse = false, uint8_t Contrast = LCD_CONTRAST,uint8_t Bias = LCD_BIAS, uint32_t LCD_spi_divider = 0, uint8_t SPICE_Pin = 0);
 	void LCDenableSleep(void);
 	void LCDdisableSleep(void);
-
+	bool LCDIsSleeping(void);
+	
 	void LCDSPIoff(void);
 	void LCDPowerDown(void);
 	
@@ -114,15 +114,20 @@ private:
 	void LCDWriteData(uint8_t data);
 	void LCDWriteCommand(uint8_t command);
 	
-	bool	_sleep;
-	bool _hardwareSPI;
+	bool isHardwareSPI(void);
+	uint32_t _LCD_SPICLK_DIVIDER=0 ; //Spi clock divider , bcm2835SPIClockDivider , HW SPI only
+	uint8_t _LCD_SPICE_PIN = 0; // which SPI_CE pin to use , 0 or 1 , HW SPI only
 	int8_t _LCD_DC;
-	int8_t _LCD_RST;
+	int8_t _LCD_RST; 
 	int8_t _LCD_CE;    // Software SPI only
 	int8_t _LCD_CLK; // Software SPI only
 	int8_t _LCD_DIN;  // Software SPI only
 	
+	uint8_t  _contrast; 
+	uint8_t  _bias; 
+	bool	 _inverse = false;
+	bool	_sleep;
 }; //end of class
 
 
-#endif // .h file Guard header
+#endif // Guard header

@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include "NOKIA_5110_Print.h"
+#include "NOKIA_5110_Print.hpp"
 
 // Public Methods ///////////////
 /* default implementation: may be overridden */

@@ -5,19 +5,29 @@
 # 2. make clean
 # 3. make run
 
+# ************************************************
+# *** User SRC directory Option Section **********
+# Pick one example "SRC" dir path and ONE ONLY.
+# Comment out the other's . 
+
+SRC=src/HelloWorld
+#SRC=src/HelloWorld_SWSPI
+#SRC=src/TestRun
+#SRC=src/SpeedTest
+# ************************************************
+
+
 CC=g++
 LDFLAGS= -lbcm2835 -lNOKIA_5110_RPI
 CFLAGS = -Iinclude/  -c -Wall 
 MD=mkdir
-
-SRC=src
 OBJ=obj
 SRCS = $(wildcard $(SRC)/*.cpp)
 OBJS = $(patsubst $(SRC)/%.cpp,  $(OBJ)/%.o, $(SRCS))
 BIN=./bin
 TARGET=$(BIN)/test
 
-all: pre-build $(TARGET) 
+all: clean pre-build $(TARGET) 
 
 run:
 	sudo $(TARGET) 
@@ -26,6 +36,7 @@ run:
 pre-build:
 	@echo '***************'
 	@echo 'START!'
+	@echo 'Making : ' $(SRC)
 	$(MD) -vp $(BIN)
 	$(MD) -vp $(OBJ)
 
