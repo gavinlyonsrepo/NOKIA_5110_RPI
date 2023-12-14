@@ -1,15 +1,19 @@
-Table of contents
----------------------------
+# NOKIA_5110_RPI
+
+## Table of contents
 
   * [Overview](#overview)
   * [Installation](#installation)
   * [Test](#test)
   * [Software](#software)
+ 	* [SPI](#spi)
+ 	* [File system](#file-system)
+ 	* [Fonts](#fonts)
   * [Hardware](#hardware)
   * [Output](#output)
   
-Overview
---------------------------------------------
+## Overview
+
 * Name: NOKIA_5110_RPI
 * Description:
 
@@ -30,8 +34,7 @@ Overview
 	3. Raspbian 10 buster  OS
 	4. bcm2835 Library 1.68 (Dependency)
 
-Installation
-------------------------------
+## Installation
 
 1. Make sure SPI bus is enabled on your raspberry PI
 
@@ -54,8 +57,8 @@ curl -sL https://github.com/gavinlyonsrepo/NOKIA_5110_RPI/archive/1.2.tar.gz | t
 cd NOKIA_5110_RPI-1.2
 sudo make
 ```
-Test
------------------------------
+
+## Test
 
 1. Next step is to test LCD and installed library with the main.cpp test file.
 Wire up your LCD. Next enter the example folder and run the makefile in THAT folder,
@@ -81,8 +84,7 @@ Comment out the rest and repeat: make and run bin/test.
 | src/TestRun | Test the library , Graphics, bitmap, text, fonts & functions | 
 | src/SpeedTest | Frame rate per second test | 
 
-Hardware
-----------------------
+## Hardware
 
 The Nokia 5110 is a basic graphic LCD screen for lots of applications. 
 GPIO function on RPI, 5 Nokia 5110 LCD lines SPI bus. Use any GPIO user likes for SW SPI.
@@ -105,10 +107,9 @@ GND(pin8) and LIGHT(pin7) to switch on /off backlight and adjust brightness.
 
 ![PICTURE](https://github.com/gavinlyonsrepo/pic_16F1619_projects/blob/master/images/NOKIA2.jpg)
 
-Software
---------------------------
+## Software
 
-**SPI**
+### SPI
 
 This library supports both Hardware SPI and software SPI.
 
@@ -126,7 +127,7 @@ defined by enum bcm2835SPIClockDivider. For full list see
 User can also adjust which HW SPI chip enable pin the use(CE0 or CE1).
 in parameters of begin method.
 
-**Files**
+### File system
 
 In example folder:
 The Main.cpp file contains tests showing library functions.
@@ -138,13 +139,12 @@ There are two makefiles
     2. Makefile in example directory build example file to an executable.
 
 
-**Fonts**
+### Fonts
 
 There are 8 fonts.
 A print class is available to print out most passed data types.
 The fonts 1-6 are byte high(at text size 1) scale-able fonts, columns of padding added by SW.
 Font 7 & 8 are special fixed size large font but it is numbers only + ':' &'.' & '-' only
-
 
 Font data table: 
 
@@ -159,8 +159,7 @@ Font data table:
 | 7 | LCDFontType_Bignum | 16x32 | ASCII 0x30-0x3A ,Numbers + : . - only | 704 |
 | 8 | LCDFontType_Mednum | 16x16 | ASCII 0x30-0x3A , Numbers + : . - only | 352 |
 
-Output
-------------------------
+### Output
 
 Example output.
 
