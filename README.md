@@ -173,7 +173,7 @@ Font data table:
 | 9 | $_ArialRound| 16x24 | 0x20-0x7E |4608|N|
 | 10 | $_ArialBold | 16x16 |0x20-0x7E |3072|N|
 
-1. $ = OLEDFontType
+1. $ = LCDFontType
 2. A print class is available to print out many data types.
 3. Fonts 1-6 are byte high(at text size 1) scale-able fonts, columns of padding added by SW.
 4. Font 7-8 are large numerical fonts and cannot be scaled(just one size).
