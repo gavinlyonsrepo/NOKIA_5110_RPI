@@ -1,19 +1,29 @@
 /*!
-	@file: example/src/HelloWorld/main.cpp
-	@brief Description library test file, carries out hello world test , HW SPI
+	@file: example/src/BitmapTests/main.cpp
+	@brief Description library test file, carries out series of Bitmap tests , HW SPI
 			PCD8544 Nokia 5110 SPI LCD display Library
 	@author Gavin Lyons.
 	@details https://github.com/gavinlyonsrepo/NOKIA_5110_RPI
 	@test
-		-# Test 001 Hello World Hardware SPI
+		-# Test 401 Bitmap full screen
+		-# Test 402 Small bitmaps 
+		-# Test 403 customChar methods
+
 */
 
 // ************ libraries **************
 #include <bcm2835.h> // for SPI, GPIO and delays. airspayce.com/mikem/bcm2835/index.html
 #include <iostream> // for std::cout
-#include "NOKIA_5110_RPI.hpp" // PCD8544 controller driver
 
-// **************** GLOBALS ***************
+#include "NOKIA_5110_RPI.hpp" // PCD8544 controller driver
+#include "Bitmap_data.hpp" // bitmap Data for bitmap tests
+
+// *********** Test setup Defines **************
+#define TEST_DELAY1 1000
+#define TEST_DELAY2 2000
+#define TEST_DELAY5 5000
+
+// **************** GPIO ***************
 #define RST_LCD 25
 #define DC_LCD 24
 
@@ -26,17 +36,25 @@ const uint8_t SPI_CE_PIN = 0; // which HW SPI chip enable pin to use,  0 or 1
 
 NOKIA_5110_RPI myLCD(RST_LCD, DC_LCD, SPICLK_FREQ, SPI_CE_PIN);
 
-// ************ Function Headers ********
+// ************ Function Headers ****************
 bool Setup(void);
-void Test(void);
+void screenReset(void);
 void EndTests(void);
+
+void testBitMap(void);
+void testCustomChar(void);
+void testSmallBitmap(void);
 
 // ************  MAIN ***************
 
-int main(void)
+int main(int argc, char **argv)
 {
-	if (!Setup()) return -1;
-	Test();
+	Setup();
+	myLCD.LCDdisplayClear();
+	testBitMap();
+	testSmallBitmap();
+	testCustomChar();
+
 	EndTests();
 	return 0;
 }
@@ -46,13 +64,12 @@ int main(void)
 // ******** Function Space *************
 
 // Initialize the device
-
 bool Setup(void)
 {
 	std::cout << "LCD Start"  << std::endl;
 	if(!bcm2835_init())
 	{
-		std::cout<< "Error 1201 : Setup : Problem with init bcm2835 library" << std::endl;
+		std::cout<< "Error 1201 : Setup :Problem with init bcm2835 library" << std::endl;
 		return false;
 	}else{
 		std::cout<< "bcm2835 library version : " << bcm2835_version() << std::endl;
@@ -65,7 +82,6 @@ bool Setup(void)
 	}
 	std::cout<< "Nokia 5110 library version : " << myLCD.LCDLibVerNumGet() << std::endl;
 	bcm2835_delay(250);
-	myLCD.LCDdisplayClear();
 	return true;
 }
 
@@ -77,15 +93,37 @@ void EndTests(void)
 	std::cout << "LCD End" << std::endl;
 }
 
-void Test(void)
+void testBitMap(void)
 {
-	std::cout<< "Nokia 5110 Hardware SPI, Hello World Test." << std::endl;
-	char testStr[]= "Hello World";
-	myLCD.SetFontNum(LCDFontType_Default);
-	myLCD.setTextSize(1);
-	myLCD.setCursor(0, 0);
-	myLCD.print(testStr);
-	myLCD.LCDdisplayUpdate();
-	bcm2835_delay(5000);
+	std::cout <<"Test 401 Bitmap full screen" << std::endl;
+	myLCD.drawBitmap(0,0, backUpIcon, LCDWIDTH, LCDHEIGHT, LCD_BLACK, sizeof(backUpIcon)/sizeof(uint8_t)); // Splash screen
+	screenReset();
 }
 
+void testCustomChar(void) {
+
+	std::cout << "Test 403 custom character 5by8 " << std::endl;
+	// Test custom character (the data is in included bitmap data file)
+	myLCD.setCursor(0, 0);
+	myLCD.customChar(myCustomChar, sizeof(myCustomChar)/sizeof(uint8_t)); // draws '|||'
+	screenReset();
+}
+
+void screenReset(void) {
+	myLCD.LCDdisplayUpdate();
+	bcm2835_delay(TEST_DELAY5);
+	myLCD.LCDdisplayClear();
+}
+
+
+void testSmallBitmap(void)
+{
+	std::cout <<"Test 402 Small bitmaps " << std::endl;
+
+	// Miniature bitmap display
+	myLCD.drawBitmap(5, 5, SignalIcon, 16, 8, LCD_BLACK, sizeof(SignalIcon)/sizeof(uint8_t));
+	myLCD.drawBitmap(60, 5, BatIcon, 16, 8, LCD_BLACK, sizeof(BatIcon)/sizeof(uint8_t));
+	screenReset();
+}
+
+// *************** EOF ****************

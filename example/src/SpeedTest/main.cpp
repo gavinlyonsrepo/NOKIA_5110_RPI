@@ -1,19 +1,23 @@
+/*!
+	@file: example/src/SpeedTest/main.cpp
+	@brief Description library test file,carries out FPS test  , HW SPI
+			PCD8544 Nokia 5110 SPI LCD display Library
+	@author Gavin Lyons.
+	@details https://github.com/gavinlyonsrepo/NOKIA_5110_RPI
+	@test
+		-# Test 901 FPS test (frame rate per second)
+*/
 
-/*
- * Project Name:  PCD8544 Nokia 5110 SPI LCD display Library
- * File: main.cpp
- * Description: library test file, carries out FPS test , HW SPI
- * Author: Gavin Lyons.
- * Created Dec 2022 v 1.2.0
- * Description: See URL for full details.
- * URL: https://github.com/gavinlyonsrepo/NOKIA_5110_RPI
- */
-
-// Test results RPI3, Frame rate per Second, FPS.
-// FPS 850, BCM2835_SPI_CLOCK_DIVIDER_64  SPICLK_FREQ = 64, 6.250Mhz
+// Test results RPI3, Frame rate per Second, FPS. v1.3
+// Hardware SPI
+// FPS 780, BCM2835_SPI_CLOCK_DIVIDER_64  SPICLK_FREQ = 64, 6.250Mhz
 // FPS 500, BCM2835_SPI_CLOCK_DIVIDER_128 SPICLK_FREQ = 128, 3.125MHz
 // FPS 150, BCM2835_SPI_CLOCK_DIVIDER_512 SPICLK_FREQ = 512, 781.25kHz 
-// FPS 60,  Software SPI.
+// 
+// Software SPI
+// FPS 215 with _LCDHighFreqDelay set to 0uS
+// FPS 60 with _LCDHighFreqDelay set to 2uS(default) 
+
 
 // ************ libraries **************
 #include <bcm2835.h> // for SPI, GPIO and delays. airspayce.com/mikem/bcm2835/index.html
@@ -30,6 +34,7 @@ uint16_t count = 0;
 bool colour = 1;
 uint64_t  previousCounter = 0;
 
+
 // **************** GPIO ***************
 #define RST_LCD 25
 #define DC_LCD 24
@@ -40,10 +45,10 @@ uint64_t  previousCounter = 0;
 const uint32_t SPICLK_FREQ = 64; // Spi clock divider, see bcm2835SPIClockDivider enum bcm2835
 const uint8_t SPI_CE_PIN = 0; // which HW SPI chip enable pin to use,  0 or 1
 
-NOKIA_5110_RPI myLCD(RST_LCD, DC_LCD);
+NOKIA_5110_RPI myLCD(RST_LCD, DC_LCD, SPICLK_FREQ, SPI_CE_PIN);
 
 // =============== Function prototype ================
-uint8_t  setup(void);
+bool Setup(void);
 void myLoop(void);
 void display_buffer(long , int );
 void EndTests(void);
@@ -53,34 +58,42 @@ static uint64_t counter( void );
 int main(int argc, char **argv)
 {
 
-	if (!setup()){return -1;}
+	if (!Setup()){return -1;}
 	myLoop();
 	EndTests();
 	return 0;
 }
 // ======================= End of main  ===================
 
-void EndTests()
+bool Setup(void)
 {
-	myLCD.LCDSPIoff(); //Stop the hardware SPI
-	myLCD.LCDPowerDown(); //Switch off display
-	bcm2835_close(); // Close the library
-	std::cout << "LCD End\r\n";
-}
-
-uint8_t setup()
-{
+	std::cout << "LCD Start"  << std::endl;
 	if(!bcm2835_init())
 	{
-		std::cout<< "Error 1201 : Problem with init bcm2835 library\r\n";
-		return -1;
+		std::cout<< "Error 1201 : Problem with init bcm2835 library" << std::endl;
+		return false;
+	}else{
+		std::cout<< "bcm2835 library version : " << bcm2835_version() << std::endl;
 	}
-	bcm2835_delay(50);
-	std::cout << "LCD Start\r\n" ;
-	myLCD.LCDBegin(inverse, contrast, bias, SPICLK_FREQ, SPI_CE_PIN);
 	bcm2835_delay(250);
-	myLCD.setTextSize(1);
-	return 1;
+	if(!myLCD.LCDBegin(inverse, contrast, bias))
+	{
+		std::cout<< "Error 1202: bcm2835_spi_begin :Cannot start spi, Running as root?" << std::endl;
+		return false;
+	}
+	std::cout<< "Nokia 5110 library version : " << myLCD.LCDLibVerNumGet() << std::endl;
+	bcm2835_delay(250);
+	myLCD.LCDdisplayClear();
+	myLCD.LCDHighFreqDelaySet(0);
+	return true;
+}
+
+void EndTests(void)
+{
+	myLCD.LCDSPIoff(); //Stop the hardware SPI
+	myLCD.LCDPowerDown(); // Power down device
+	bcm2835_close(); // Close the bcm2835 library
+	std::cout << "LCD End" << std::endl;
 }
 
 void myLoop() {
@@ -125,13 +138,12 @@ void display_buffer(long currentFramerate, int count)
 	myLCD.print(fps);
 	myLCD.print(" fps");
 	myLCD.setCursor(0, 40);
-	myLCD.print("V 1.2.0");
+	myLCD.print(myLCD.LCDLibVerNumGet());
 
 	myLCD.fillRect(60, 1, 20, 20, colour);
 	myLCD.fillCircle(60, 35, 10, !colour);
 
 	myLCD.LCDdisplayUpdate();
-	// ** **
 }
 
 // This func returns nano-seconds as a 64-bit unsigned number, 

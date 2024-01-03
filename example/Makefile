@@ -1,5 +1,6 @@
 # Makefile to build an example file to test file using library NOKIA_5110_RPI
 # ProjectURL : https://github.com/gavinlyonsrepo/NOKIA_5110_RPI
+
 # Options :
 # 1. make 
 # 2. make clean
@@ -12,7 +13,10 @@
 
 SRC=src/HelloWorld
 #SRC=src/HelloWorld_SWSPI
-#SRC=src/TestRun
+#SRC=src/TextTests
+#SRC=src/GraphicTests
+#SRC=src/FunctionTests
+#SRC=src/BitmapTests
 #SRC=src/SpeedTest
 # ************************************************
 

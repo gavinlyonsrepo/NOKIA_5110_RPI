@@ -1,11 +1,13 @@
-/*
- * Project Name:  PCD8544 Nokia 5110 SPI LCD display Library RPI
- * File: main.cpp
- * Description: library test file , "Hello world" ,basic use case, Software SPI 
- * Author: Gavin Lyons.
- * Description: See URL for full details.
- * URL: https://github.com/gavinlyonsrepo/NOKIA_5110_RPI
- */
+/*!
+	@file example/src/HelloWorld_SWSPI/main.cpp
+	@brief Description library test file, carries out hello world test , SW SPI
+			PCD8544 Nokia 5110 SPI LCD display Library
+	@author Gavin Lyons.
+	@details https://github.com/gavinlyonsrepo/NOKIA_5110_RPI
+	@test
+		-# Test 002 Hello World Software SPI
+*/
+
 
 // ************ libraries **************
 #include <bcm2835.h> // for SPI, GPIO and delays. airspayce.com/mikem/bcm2835/index.html
@@ -13,6 +15,7 @@
 #include "NOKIA_5110_RPI.hpp" // PCD8544 controller driver
 
 // **************** GPIO ***************
+// Software SPI, pick any GPIO # you want.
 #define RST_LCD 25
 #define DC_LCD 24
 #define SCLK_LCD 22
@@ -26,7 +29,7 @@
 NOKIA_5110_RPI myLCD(RST_LCD, DC_LCD, CS_LCD, SDIN_LCD, SCLK_LCD);
 
 // ************ Function Headers ********
-void Setup(void);
+bool Setup(void);
 void Test(void);
 void EndTests(void);
 
@@ -34,13 +37,7 @@ void EndTests(void);
 
 int main(void)
 {
-	if(!bcm2835_init())
-	{
-		std::cout<< "Error 1201 : Problem with init bcm2835 library\r\n";
-		return -1;
-	}
-	
-	Setup();
+	if (!Setup()) return -1;
 	Test();
 	EndTests();
 	return 0;
@@ -52,13 +49,23 @@ int main(void)
 
 // Initialize the device
 
-void Setup(void)
+bool Setup(void)
 {
+	std::cout << "LCD Start"  << std::endl;
+	if(!bcm2835_init())
+	{
+		std::cout<< "Error 1201 : Problem with init bcm2835 library" << std::endl;
+		return false;
+	}else{
+		std::cout<< "bcm2835 library version : " << bcm2835_version() << std::endl;
+	}
 	bcm2835_delay(250);
-	std::cout << "LCD Start\r\n" ;
 	myLCD.LCDBegin(inverse, contrast, bias);
+	std::cout<< "Nokia 5110 library version : " << myLCD.LCDLibVerNumGet() << std::endl;
+	std::cout<< "Nokia 5110 Software SPI GPIO delay is set to " << myLCD.LCDHighFreqDelayGet() << "uS" << std::endl;
 	bcm2835_delay(250);
 	myLCD.LCDdisplayClear();
+	return true;
 }
 
 
@@ -66,16 +73,16 @@ void EndTests(void)
 {
 	myLCD.LCDPowerDown(); // Power down device
 	bcm2835_close(); // Close the bcm2835 library
-	std::cout << "LCD End\r\n";
+	std::cout << "LCD End" << std::endl;
 }
 
 void Test(void)
 {
-	char testStr[]= "Hello SWSPI";
-	
+	std::cout<< "Nokia 5110 Software SPI, Hello World Test " << std::endl;
+	char testStr[]= "Hello World   SWSPI";
 	myLCD.SetFontNum(LCDFontType_Default);
 	myLCD.setTextSize(1);
-	myLCD.setCursor(5, 5);
+	myLCD.setCursor(0, 0);
 	myLCD.print(testStr);
 	myLCD.LCDdisplayUpdate();
 	bcm2835_delay(5000);

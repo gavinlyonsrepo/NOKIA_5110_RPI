@@ -1,58 +1,50 @@
-/*
-* Project Name: Nokia  5110  library 
-* Description: Header file for NOKIA 5110 library to communicate with LCD
-* Controls SPI and basic functionality 
-* Author: Gavin Lyons.
-* Created: July 2021
-* Description: See URL for full details.
-* URL: https://github.com/gavinlyonsrepo/NOKIA_5110_RPI
+ /*!
+	@file  NOKIA_5110_RPI.hpp
+	@brief Header file for NOKIA 5110 library to communicate with LCD
+			Controls SPI and basic functionality
+	@details Project Name: NOKIA_5110_RPI
+		URL: https://github.com/gavinlyonsrepo/NOKIA_5110_RPI
+	@author  Gavin Lyons
 */
 
-#ifndef _NOKIA_5110_RPI_H
-#define _NOKIA_5110_RPI_H
+#pragma once
 
 // ************ libraries ************
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdarg.h>
-#include <stdio.h> 
+#include <stdio.h>
 #include <bcm2835.h>
 
 #include "NOKIA_5110_graphics.hpp"
 
 //*********** Definitions **************
 
+#define LCD_BLACK 1 /**< LCD color on */
+#define LCD_WHITE 0 /**< LCD color off */
 
-#define LCD_BLACK 1
-#define LCD_WHITE 0
+#define LCDWIDTH  84 /**< LCD Width in pixels*/
+#define LCDHEIGHT 48 /**< LCD Height in pixels */
 
-#define LCDWIDTH  84
-#define LCDHEIGHT 48
+#define LCD_FUNCTIONSET          0x20 /** LCD function set*/
+#define LCD_POWERDOWN            0x04 /**< LCD power off */
+#define LCD_ENTRYMODE            0x02 /**< LCD entry mode */
+#define LCD_EXTENDEDINSTRUCTION  0x01 /**< LCD get into the EXTENDED mode when combined with Function set*/
 
-#define LCD_POWERDOWN            0x04
-#define LCD_ENTRYMODE            0x02
-#define LCD_EXTENDEDINSTRUCTION  0x01
+#define LCD_DISPLAYCONTROL       0x08 /**< Set display control */
+#define LCD_DISPLAYBLANK         0x00 /**< Blank display */
+#define LCD_DISPLAYNORMAL        0x04 /**< normal mode display */
+#define LCD_DISPLAYALLON         0x01 /**< all pixels on */
+#define LCD_DISPLAYINVERTED      0x05 /**< display inverted */
 
-#define LCD_DISPLAYBLANK         0x00
-#define LCD_DISPLAYNORMAL        0x04
-#define LCD_DISPLAYALLON         0x01
-#define LCD_DISPLAYINVERTED      0x05
-
-#define LCD_FUNCTIONSET          0x20
-#define LCD_DISPLAYCONTROL       0x08
 #define LCD_SETYADDR             0x40
 #define LCD_SETXADDR             0x80
 
-#define LCD_SETTEMP  0x04
-#define LCD_SETBIAS  0x13
-#define LCD_SETVOP   0x80
+#define LCD_SETTEMP  0x04   /**< set temperature coefficient */ 
+#define LCD_CONTRAST 0xB0  /**< default value set LCD VOP contrast range 0xB1-BF */
+#define LCD_BIAS 0x13  /**< LCD Bias mode 1:48 0x12 to 0x14 */
 
-#define LCD_CONTRAST 0xB0
-#define LCD_BIAS 0x13
-
-#define LCD_HIGHFREQ_DELAY 2 // uS delay ,used in SW SPI
-
-// GPIO 
+// GPIO
 #define LCD_DC_SetHigh  bcm2835_gpio_write(_LCD_DC, HIGH)
 #define LCD_DC_SetLow  bcm2835_gpio_write(_LCD_DC, LOW)
 #define LCD_RST_SetHigh  bcm2835_gpio_write(_LCD_RST, HIGH)
@@ -74,60 +66,77 @@
 
 // Section : Enums
 
-typedef enum  {
-	LCD_Degrees_0 = 0, LCD_Degrees_90, LCD_Degrees_180, LCD_Degrees_270
-}LCD_rotate_e; // LCD rotate modes in degrees 
+/*! Enum to hold current screen rotation in degrees  */
+enum LCD_rotate_e : uint8_t
+{
+	LCD_Degrees_0 =   0,    /**< LCD screen rotated 0 degrees */
+	LCD_Degrees_90 =  1,    /**< LCD screen rotated 90 degrees  */
+	LCD_Degrees_180 = 2,    /**< LCD screen rotated 180 degrees  */
+	LCD_Degrees_270 = 3     /**< LCD screen rotated 270 degrees */
+};
 
-// Section :: Classes 
+// Section :: Classes
 
-
+/*!
+	@brief Class Controls SPI comms and LCD functionality
+*/
 class NOKIA_5110_RPI : public NOKIA_5110_graphics
 {
 
 public:
 
 	NOKIA_5110_RPI(uint8_t LCD_RST, uint8_t LCD_DC, uint8_t LCD_CE, int8_t LCD_DIN, int8_t LCD_CLK);
-	NOKIA_5110_RPI(uint8_t LCD_RST, uint8_t LCD_DC);
+	NOKIA_5110_RPI(uint8_t LCD_RST, uint8_t LCD_DC, uint32_t LCD_spi_divider, uint8_t SPICE_Pin);
 	~NOKIA_5110_RPI(){};
-	
-	void LCDBegin(bool Inverse = false, uint8_t Contrast = LCD_CONTRAST,uint8_t Bias = LCD_BIAS, uint32_t LCD_spi_divider = 0, uint8_t SPICE_Pin = 0);
+
+	bool LCDBegin(bool Inverse = false, uint8_t Contrast = LCD_CONTRAST,uint8_t Bias = LCD_BIAS);
 	void LCDenableSleep(void);
 	void LCDdisableSleep(void);
 	bool LCDIsSleeping(void);
-	
+
+	void LCDSPIHWSettings(void);
 	void LCDSPIoff(void);
+
 	void LCDPowerDown(void);
-	
+
 	virtual void LCDDrawPixel(uint8_t x, uint8_t y, bool color) override;
 	void LCDsetRotation(LCD_rotate_e m);
 	void LCDSetContrast(uint8_t con);
 	void LCDdisplayUpdate(void);
 	void LCDdisplayClear(void);
 	void LCDfillScreen(void);
+	void LCDfillScreenPattern(uint8_t);
 	void LCDinvertDisplay(bool inv);
-	
+
 	uint8_t LCDDisplayBuffer[LCDWIDTH * (LCDHEIGHT  / 8)+1];
-	
+
+	uint16_t LCDLibVerNumGet(void);
+	uint16_t LCDHighFreqDelayGet(void);
+	void LCDHighFreqDelaySet(uint16_t);
+
 private:
 
-	void LCDSPIInitialize(void);
 	void LCDWriteData(uint8_t data);
 	void LCDWriteCommand(uint8_t command);
-	
 	bool isHardwareSPI(void);
-	uint32_t _LCD_SPICLK_DIVIDER=0 ; //Spi clock divider , bcm2835SPIClockDivider , HW SPI only
-	uint8_t _LCD_SPICE_PIN = 0; // which SPI_CE pin to use , 0 or 1 , HW SPI only
-	int8_t _LCD_DC;
-	int8_t _LCD_RST; 
-	int8_t _LCD_CE;    // Software SPI only
-	int8_t _LCD_CLK; // Software SPI only
-	int8_t _LCD_DIN;  // Software SPI only
 	
-	uint8_t  _contrast; 
-	uint8_t  _bias; 
-	bool	 _inverse = false;
-	bool	_sleep;
+	bool _LCDHardwareSPI = true;   /**< Hardware SPI true on , false off*/
+	uint32_t _LCD_SPICLK_DIVIDER=0 ; /**< SPI clock divider , bcm2835SPIClockDivider , HW SPI only */
+	uint8_t _LCD_SPICE_PIN = 0; /**< which SPI_CE pin to use , 0 or 1 , HW SPI only */
+	uint16_t _LCDHighFreqDelay = 2; /**< uS GPIO Communications delay ,used in SW SPI ONLY */
+	
+	int8_t _LCD_DC; /**< Data or command GPIO */
+	int8_t _LCD_RST; /**< Reset GPIO */
+	int8_t _LCD_CE;    /**< Chip enable,  Software SPI only */
+	int8_t _LCD_CLK; /**< Clock GPIO, Software SPI only*/
+	int8_t _LCD_DIN; /**< Data GPIO ,Software SPI only */
+
+	uint8_t  _contrast; /**< LCD contrast */
+	uint8_t  _bias;     /**< LCD bias*/
+	bool	 _inverse = false; /**< LCD inverted , false for off*/
+	bool	_sleep; /**< LCD sleep mode*/
+
+	const uint16_t _LibVersionNum = 130; /**< library version number 130 1.3.0*/
 }; //end of class
 
 
-#endif // Guard header
