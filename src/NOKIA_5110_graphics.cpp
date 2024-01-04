@@ -925,23 +925,24 @@ bool NOKIA_5110_graphics::drawText(uint8_t x, uint8_t y, char* pText, uint8_t co
 		std::cout<< "Error drawText 2 :String array is not valid pointer" << std::endl;
 		return false;
 	}
-	uint8_t _cursorX, _cursorY;
-	_cursorX = x, _cursorY = y;
+	uint8_t cursorX = x;
+	uint8_t cursorY = y;
+
 	while (*pText != '\0')
 	{
 		if (_textWrap  && ((_cursorX + size * _CurrentFontWidth) > _width))
 		{
-			_cursorX = 0;
-			_cursorY = _cursorY + size * 7 + 3;
-			if (_cursorY > _height) _cursorY = _height;
+			cursorX = 0;
+			cursorY = cursorY + size * 7 + 3;
+			if (cursorY > _height) cursorY = _height;
 		}
-		if(!drawChar(_cursorX, _cursorY, *pText, color, bg, size))
+		if(!drawChar(cursorX, cursorY, *pText, color, bg, size))
 		{
 			std::cout<< "Error drawText 3: Method drawChar failed" << std::endl;
 			return false;
 		}
-		_cursorX = _cursorX + size * (_CurrentFontWidth + 1);
-		if (_cursorX > _width) _cursorX = _width;
+		_cursorX = cursorX + size * (_CurrentFontWidth + 1);
+		if (cursorX > _width) cursorX = _width;
 		pText++;
 	}
 	return true;

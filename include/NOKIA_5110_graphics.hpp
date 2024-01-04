@@ -18,7 +18,7 @@
 #include "NOKIA_5110_Print.hpp"
 #include "NOKIA_5110_RPI_Font.hpp"
 
-// Section defines TODO
+// Section defines
 #define LCD_min(a,b) (((a) < (b)) ? (a) : (b))
 #define LCD_swap_int16_t(a, b) { int16_t t = a; a = b; b = t; }
 
