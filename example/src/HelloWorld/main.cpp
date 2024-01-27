@@ -61,6 +61,7 @@ bool Setup(void)
 	if(!myLCD.LCDBegin(inverse, contrast, bias))
 	{
 		std::cout<< "Error 1202: Setup : bcm2835_spi_begin :Cannot start spi, Running as root?" << std::endl;
+		bcm2835_close(); // Close the bcm2835 library
 		return false;
 	}
 	std::cout<< "Nokia 5110 library version : " << myLCD.LCDLibVerNumGet() << std::endl;
@@ -81,7 +82,7 @@ void Test(void)
 {
 	std::cout<< "Nokia 5110 Hardware SPI, Hello World Test." << std::endl;
 	char testStr[]= "Hello World";
-	myLCD.SetFontNum(LCDFontType_Default);
+	myLCD.SetFontNum(LCDFont_Default);
 	myLCD.setTextSize(1);
 	myLCD.setCursor(0, 0);
 	myLCD.print(testStr);

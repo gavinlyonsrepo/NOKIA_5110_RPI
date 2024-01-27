@@ -66,15 +66,6 @@
 
 // Section : Enums
 
-/*! Enum to hold current screen rotation in degrees  */
-enum LCD_rotate_e : uint8_t
-{
-	LCD_Degrees_0 =   0,    /**< LCD screen rotated 0 degrees */
-	LCD_Degrees_90 =  1,    /**< LCD screen rotated 90 degrees  */
-	LCD_Degrees_180 = 2,    /**< LCD screen rotated 180 degrees  */
-	LCD_Degrees_270 = 3     /**< LCD screen rotated 270 degrees */
-};
-
 // Section :: Classes
 
 /*!
@@ -96,11 +87,9 @@ public:
 
 	void LCDSPIHWSettings(void);
 	void LCDSPIoff(void);
-
 	void LCDPowerDown(void);
 
 	virtual void LCDDrawPixel(uint8_t x, uint8_t y, bool color) override;
-	void LCDsetRotation(LCD_rotate_e m);
 	void LCDSetContrast(uint8_t con);
 	void LCDdisplayUpdate(void);
 	void LCDdisplayClear(void);
@@ -136,7 +125,7 @@ private:
 	bool	 _inverse = false; /**< LCD inverted , false for off*/
 	bool	_sleep; /**< LCD sleep mode*/
 
-	const uint16_t _LibVersionNum = 130; /**< library version number 130 1.3.0*/
+	const uint16_t _LibVersionNum = 140; /**< library version number 130 1.3.0*/
 }; //end of class
 
 

@@ -37,11 +37,11 @@
 	2. C++, g++ (Debian 12.2.0) 
 	3. Raspbian , Debian 12 bookworm OS, , 64 bit.
 	4. kernel : aarch64 Linux 6.1.0-rpi7-rpi-v8
-	5. [bcm2835 Library 1.73 dependency](http://www.airspayce.com/mikem/bcm2835/). Provides low level SPI bus, delays and GPIO control.
+	5. [bcm2835 Library 1.71 dependency](http://www.airspayce.com/mikem/bcm2835/). Provides low level SPI bus, delays and GPIO control.
 
 ## Installation
 
-1. Install the dependency bcm2835 Library if not installed (at time of writing latest version is 1.73)
+1. Install the dependency bcm2835 Library if not installed (at time of writing latest version is 1.71)
 	* The bcm2835 library  provides SPI bus, delays and GPIO control.
 	* Install the C libraries of bcm2835, [Installation instructions here](http://www.airspayce.com/mikem/bcm2835/)
 
@@ -50,14 +50,14 @@
 	* Run following command to download from github.
 
 ```sh
-curl -sL https://github.com/gavinlyonsrepo/NOKIA_5110_RPI/archive/1.3.tar.gz | tar xz
+curl -sL https://github.com/gavinlyonsrepo/NOKIA_5110_RPI/archive/1.4.tar.gz | tar xz
 ```
 
 3. Run "make" to run the makefile to install library, it will be
     installed to usr/lib and usr/include
 
 ```sh
-cd NOKIA_5110_RPI-1.3
+cd NOKIA_5110_RPI-1.4
 make
 sudo make install
 ```
@@ -122,7 +122,7 @@ GND(pin8) and LIGHT(pin7) to switch on /off backlight and adjust brightness.
 ### API
 
 The Software is commented mostly for"doxygen" and if users uses "doxygen" software
-an API can be generated. A Doxyfile is in doc sub folder in repository.
+an API HTML document can be generated. A Doxyfile is in doc sub folder in repository.
 
 ### SPI
 
@@ -160,9 +160,9 @@ There are two makefiles
 
 Font data table:
 
-| num | enum name | Char size XbyY | ASCII range | Size bytes | Scale-able |
+| num | enum name | Char size XbyY | ASCII range | Size bytes | Size Scale-able |
 | ------ | ------ | ------ | ------ |  ------ | ----- |
-| 1 | $_Default | 5x8 |0-0xFF, Full Extended|1275 |Y|
+| 1 | $_Default | 5x8 |0-0x7F|635 |Y|
 | 2 | $_Thick   | 7x8 |0x20-0x5A, no lowercase letters |406|Y|
 | 3 | $_SevenSeg  | 4x8 |0x20-0x7A |360|Y|
 | 4 | $_Wide | 8x8 |0x20-0x5A, no lowercase letters|464|Y|
@@ -172,24 +172,26 @@ Font data table:
 | 8 | $_Mednum | 16x16 |0x2D-0x3A ,0-10 - . / :|448|N|
 | 9 | $_ArialRound| 16x24 | 0x20-0x7E |4608|N|
 | 10 | $_ArialBold | 16x16 |0x20-0x7E |3072|N|
+| 11 | $_Mia| 8x16 | 0x20-0x7E |1520|N|
+| 12 | $_Dedica | 6x12 |0x20-0x7E |1152|N|
 
 1. $ = LCDFontType
 2. A print class is available to print out many data types.
 3. Fonts 1-6 are byte high(at text size 1) scale-able fonts, columns of padding added by SW.
 4. Font 7-8 are large numerical fonts and cannot be scaled(just one size).
-5. Fonts 9-10 large Alphanumeric fonts and cannot be scaled(just one size)
+5. Fonts 9-12 large Alphanumeric fonts and cannot be scaled(just one size)
 
 Font Methods:
 
 | Font num | Method | Notes |
 | ------ | ------ | ------ |
-| 1-6 | drawChar| draws single  character |
-| 1-6 | drawText | draws character array |
-| 7-10 | drawCharBigFont | draws single  character |
-| 7-10 | drawTextBigFont | draws character array |
-| 1-10 | print | Polymorphic print class which will print out many data types |
+| 1-6 | drawChar|Y| draws single  character |
+| 1-6 | drawText |Y| draws character array |
+| 7-12 | drawChar|N| draws single  character |
+| 7-12 | drawText|N| draws character array |
+| 1-12 | print | Polymorphic print class which will print out many data types |
 
-These methods return false in event of an error, such as wrong font chosen , ASCII character outside
+These methods returnn a enum( LCD_Return_Codes_e), non-zero in event of an error, see API doc., such as wrong font chosen , ASCII character outside
 chosen fonts range, character out of screen bounds and invalid character array pointer object.
 
 ### Bitmap
@@ -201,9 +203,9 @@ Two different bitmaps methods can be used.
 | 1 | drawBitmap() |vertical| Draws bitmaps to the buffer, Bitmap's height must be divisible by 8| 
 | 2 | customChar()| vertical | Draws a custom character on screen 5by8, PIC legacy function | 
 
-The drawBitmap will return an error if : The Bitmap is completely off screen , 
+The drawBitmap will return an error( enum( LCD_Return_Codes_e)) if : The Bitmap is completely off screen , 
 Invalid Bitmap pointer object, bitmap bigger than screen , bitmap bigger/smaller than provided width and height co-ordinates
-( This prevents buffer overflow if user enters wrong data.).
+( This helps prevents buffer overflow if user enters wrong data.).
 The Bitmap's height must be divisible by 8. I.e for a full screen bitmap with width=84 and height=48.
 Bitmap excepted size = 84 * (48/8) = 504 bytes.
 

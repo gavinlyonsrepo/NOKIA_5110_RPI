@@ -90,8 +90,7 @@ if (isHardwareSPI() == false)
 		LCDWriteCommand(LCD_DISPLAYCONTROL | LCD_DISPLAYNORMAL);
 	else
 		LCDWriteCommand(LCD_DISPLAYCONTROL | LCD_DISPLAYINVERTED);
-
-	_rotation = 0;
+	_LCD_rotate = LCD_Degrees_0;
 	_width  = LCDWIDTH;
 	_height = LCDHEIGHT;
 	return true;
@@ -230,8 +229,9 @@ void NOKIA_5110_RPI::LCDDrawPixel(uint8_t x, uint8_t y, bool color) {
 
 	if ( (x >= _width) || (y >= _height) )
 	return;
+	uint8_t rotation = getRotation();
 
-	switch(_rotation) {
+	switch(rotation) {
 	case LCD_Degrees_90:
 		LCD_swap_uint8_t(x, y);
 		y =  LCDHEIGHT - 1 - y;
@@ -283,26 +283,6 @@ void NOKIA_5110_RPI::LCDfillScreenPattern(uint8_t Pattern) {
 		LCDDisplayBuffer[i] = Pattern;
 }
 
-/*!
-	@brief  set rotation setting for LCDdisplayUpdate
-	@param  mode enum LCD_rotate_e 0 thru 3 corresponding to 4 rotations:
-*/
-void NOKIA_5110_RPI::LCDsetRotation(LCD_rotate_e mode) {
-	_rotation = (mode & 3);
-
-	switch(_rotation) {
-	case LCD_Degrees_0:
-	case LCD_Degrees_180:
-		_width  = LCDWIDTH;
-		_height = LCDHEIGHT;
-	break;
-	case LCD_Degrees_90:
-	case LCD_Degrees_270:
-		_width  = LCDHEIGHT;
-		_height = LCDWIDTH;
-		break;
-	}
-}
 
 /*!
 	@brief inverts color on display

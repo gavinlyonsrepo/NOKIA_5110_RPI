@@ -20,7 +20,8 @@ NOKIA_5110_graphics::NOKIA_5110_graphics()
 */
 size_t NOKIA_5110_graphics::write(uint8_t character)
 {
-	if (_FontNumber < LCDFontType_Bignum)
+	int DrawCharReturnCode;
+	if (_FontNumber < LCDFont_Bignum)
 	{
 		switch (character)
 		{
@@ -30,10 +31,11 @@ size_t NOKIA_5110_graphics::write(uint8_t character)
 		break;
 		case'\r':/* skip */ break;
 		default:
-				if(!drawChar(_cursorX, _cursorY, character, _textColor, _textBgColor, _textSize))
+				DrawCharReturnCode = drawChar(_cursorX, _cursorY, character, _textColor, _textBgColor, _textSize) ;
+				if(DrawCharReturnCode  != LCD_Success)
 				{
-					std::cout<< "Error write_print method 1: Method drawChar failed" << std::endl;
-					return -1;
+					std::cout<< "Error write_print method 1: Method drawChar failed" << DrawCharReturnCode << std::endl;
+					return DrawCharReturnCode;
 				}
 			_cursorX += _textSize*(_CurrentFontWidth+1);
 				if (_textWrap && (_cursorX > (_width - _textSize*(_CurrentFontWidth+1))))
@@ -53,10 +55,11 @@ size_t NOKIA_5110_graphics::write(uint8_t character)
 			break;
 			case '\r': /* skip */  break;
 			default:
-				if(!drawCharBigFont(_cursorX, _cursorY, character, _textColor, _textBgColor))
+				DrawCharReturnCode = drawChar(_cursorX, _cursorY, character, _textColor, _textBgColor) ;
+				if(DrawCharReturnCode  != LCD_Success)
 				{
-					std::cout<< "Error write_print method 2 : Method drawCharBigFont failed" << std::endl;
-					return -1;
+					std::cout<< "Error write_print method 2 : Method drawChar failed" << DrawCharReturnCode << std::endl;
+					return DrawCharReturnCode;
 				}
 				_cursorX += (_CurrentFontWidth);
 				if (_textWrap && (_cursorX  > (_width - (_CurrentFontWidth+1))))
@@ -496,7 +499,6 @@ void NOKIA_5110_graphics::fillTriangle(uint16_t x0, uint16_t y0, uint16_t x1, ui
 		drawHLine(a, y, b-a+1, color);
 	}
 
-
 	sa = dx12 * (y - y1);
 	sb = dx02 * (y - y0);
 	for(; y<=y2; y++) {
@@ -515,14 +517,15 @@ void NOKIA_5110_graphics::fillTriangle(uint16_t x0, uint16_t y0, uint16_t x1, ui
 	@brief print custom char  (dimension: 5x8 x by y pixels)
 	@param character the character to draw
 	@param sizeofArray The size of the character array passed must be 5
+	@return LCD_Return_Codes_e
 */
-bool NOKIA_5110_graphics::customChar(const uint8_t* character, uint16_t sizeofArray) {
+LCD_Return_Codes_e NOKIA_5110_graphics::customChar(const uint8_t* character, uint16_t sizeofArray) {
 
 	// Check for null pointer
 	if(character == nullptr)
 	{
 		std::cout<< "Error customChar 1 :Custom char array is not valid pointer" << std::endl;
-		return false;
+		return LCD_BitmapNullptr;
 	}
 
 	const uint8_t CustomCharWidth = 5;
@@ -534,7 +537,7 @@ bool NOKIA_5110_graphics::customChar(const uint8_t* character, uint16_t sizeofAr
 	if(sizeofArray != CustomCharWidth )
 	{
 		std::cout << "Error customChar 2 :: CustomChar array must always be 5 bytes long :" << sizeofArray<<std::endl;
-		return false;
+		return LCD_CustomCharLen;
 	}
 
 	for(i = 0; i < CustomCharWidth ; i++ )
@@ -580,7 +583,7 @@ bool NOKIA_5110_graphics::customChar(const uint8_t* character, uint16_t sizeofAr
 		if( _cursorY > ((uint16_t)_height + _textSize * CustomCharHeight ) )
 			_cursorY = _height;
 	}
-	return true;
+	return LCD_Success;
 }
 
 
@@ -592,15 +595,16 @@ bool NOKIA_5110_graphics::customChar(const uint8_t* character, uint16_t sizeofAr
 	@param   color foreground color
 	@param   bg   background color
 	@param size Desired text size. 1 is default 6x8, 2 is 12x16, 3 is 18x24, etc
+	@return LCD_Return_Codes_e 
 */
-bool NOKIA_5110_graphics::drawChar(uint16_t x, uint16_t y, uint8_t character, uint8_t color, uint8_t bg,uint8_t size)
+LCD_Return_Codes_e NOKIA_5110_graphics::drawChar(uint16_t x, uint16_t y, uint8_t character, uint8_t color, uint8_t bg,uint8_t size)
 {
 
 	// 1. Check for wrong font
-	if (_FontNumber >= LCDFontType_Bignum)
+	if (_FontNumber >= LCDFont_Bignum)
 	{
-		std::cout<< "Error drawChar1 : Wrong font selected, must be font 1-6 "<< std::endl;
-		return false;
+		std::cout<< "Error drawChar 1: Wrong font selected, must be font 1-6 "<< std::endl;
+		return LCD_WrongFont;
 	}
 	// 2. Check for screen out of  bounds
 	if((x >= _width)            || // Clip right
@@ -609,13 +613,13 @@ bool NOKIA_5110_graphics::drawChar(uint16_t x, uint16_t y, uint8_t character, ui
 	((y + _CurrentFontheight  * size - 1) < 0))   // Clip top
 	{
 		std::cout<< "Error drawChar 2: Co-ordinates out of bounds " << std::endl;
-		return false;
+		return LCD_CharScreenBounds;
 	}
 	// 3. Check for character out of font range bounds
 	if ( character < _CurrentFontoffset || character >= (_CurrentFontLength+ _CurrentFontoffset))
 	{
-		std::cout<< "Error  drawChar 3: Character out of Font bounds " << character << " " <<+_CurrentFontoffset <<  +(_CurrentFontLength + _CurrentFontoffset) << std::endl;
-		return false;
+		std::cout<< "Error drawChar 3: Character out of Font bounds " << character << " " <<+_CurrentFontoffset <<  +(_CurrentFontLength + _CurrentFontoffset) << std::endl;
+		return LCD_CharFontASCIIRange;
 	}
 
 	for (int8_t i=0; i<(_CurrentFontWidth+1); i++ )
@@ -629,27 +633,27 @@ bool NOKIA_5110_graphics::drawChar(uint16_t x, uint16_t y, uint8_t character, ui
 	{
 		switch (_FontNumber)
 		{
-			case LCDFontType_Default:
+			case LCDFont_Default:
 				line = pFontDefaultptr[(character - _CurrentFontoffset) * _CurrentFontWidth + i];
 			break;
-			case LCDFontType_Thick:
+			case LCDFont_Thick:
 				line = pFontThickptr[(character - _CurrentFontoffset) * _CurrentFontWidth + i];
 			break;
-			case LCDFontType_SevenSeg:
+			case LCDFont_SevenSeg:
 				line = pFontSevenSegptr[(character - _CurrentFontoffset) * _CurrentFontWidth + i];
 			break;
-			case LCDFontType_Wide:
+			case LCDFont_Wide:
 				line = pFontWideptr[(character - _CurrentFontoffset) * _CurrentFontWidth + i];
 			break;
-			case LCDFontType_Tiny:
+			case LCDFont_Tiny:
 				line =pFontTinyptr[(character - _CurrentFontoffset) * _CurrentFontWidth + i];
 			break;
-			case LCDFontType_Homespun:
+			case LCDFont_Homespun:
 				line = pFontHomeSpunptr[(character - _CurrentFontoffset) * _CurrentFontWidth + i];
 			break;
 			default:
 				std::cout<< "Error drawChar 4: Wrong font number , must be 1-6" << std::endl;
-				return false;
+				return LCD_WrongFont;
 			break;
 		}//switch font linenumber
 	}
@@ -672,7 +676,7 @@ bool NOKIA_5110_graphics::drawChar(uint16_t x, uint16_t y, uint8_t character, ui
 			line >>= 1;
 		}
 	} // for loop
-	return true;
+	return LCD_Success;
 }
 
 /*!
@@ -723,33 +727,19 @@ void NOKIA_5110_graphics::setTextColor(uint8_t c, uint8_t b) {
 	@brief Whether text that is too long should '_textWrap' around to the next line.
 	@param w  Set true for _textWrapping, false for clipping
 */
-void NOKIA_5110_graphics::setTextWrap(bool w) {
-	_textWrap = w;
-}
-
-/*!
-	@brief     Get rotation setting for display
-	@returns   0 thru 3 corresponding to 4 cardinal rotations
-*/
-uint8_t NOKIA_5110_graphics::getRotation(void) {
-	return _rotation;
-}
+void NOKIA_5110_graphics::setTextWrap(bool w) {_textWrap = w;}
 
 /*!
 	@brief     Get current width of display, can vary with rotation
 	@returns   _width
 */
-uint16_t NOKIA_5110_graphics::getWidth(void) {
-	return _width;
-}
+uint16_t NOKIA_5110_graphics::getWidth(void) {return _width;}
 
 /*!
 	@brief     Get current height of display, can vary with rotation
 	@returns   _height
 */
-uint16_t NOKIA_5110_graphics::getHeight(void) {
-	return _height;
-}
+uint16_t NOKIA_5110_graphics::getHeight(void) {return _height;}
 
 /*!
 	 @brief    Draw a 1-bit image at the specified (x,y) position,
@@ -761,36 +751,37 @@ uint16_t NOKIA_5110_graphics::getHeight(void) {
 	@param    h   Height of bitmap in pixels
 	@param    color color of bitmap nlack or white
 	@param     sizeOfBitmap Size of the bitmap in bytes
+	@return LCD_Return_Codes_e
 	@note data must be vertically addressed
 */
-bool NOKIA_5110_graphics::drawBitmap(uint16_t x, uint16_t y, const uint8_t *bitmap, uint16_t w, uint16_t h,
+LCD_Return_Codes_e NOKIA_5110_graphics::drawBitmap(uint16_t x, uint16_t y, const uint8_t *bitmap, uint16_t w, uint16_t h,
 	uint8_t color, uint16_t sizeOfBitmap) {
 
 	// User error checks
 	// 1. Completely out of bounds?
-	if (x > LCDWIDTH || y > LCDHEIGHT)
+	if (x > _width || y > _height)
 	{
-		std::cout<< "Error drawBitmap 1 : Bitmap co-ord out of bounds, check x and y" << std::endl;
-		return false;
+		std::cout<< "Error drawBitmap 1: Bitmap co-ord out of bounds, check x and y" << std::endl;
+		return LCD_BitmapScreenBounds ;
 	}
 	// 2. bitmap weight and height
-	if (w > LCDWIDTH || h > LCDHEIGHT)
+	if (w > _width || h > _height)
 	{
-		std::cout<< "Error drawBitmap 2 : Bitmap is larger than screen, check w and h" << std::endl;
-		return false;
+		std::cout<< "Error drawBitmap 2: Bitmap is larger than screen, check w and h" << std::endl;
+		return LCD_BitmapLargerThanScreen;
 	}
 	// 3. bitmap is null
 	if(bitmap == nullptr)
 	{
-		std::cout<< "Error drawBitmap 3 : Bitmap is is not valid pointer" << std::endl;
-		return false;
+		std::cout<< "Error drawBitmap 3: Bitmap is is not valid pointer" << std::endl;
+		return LCD_BitmapNullptr;
 	}
 
 	// 4.check bitmap size
 	if(sizeOfBitmap != (w * (h/8)))
 	{
-		std::cout<< "Error drawBitmap 4 : Bitmap size is incorrect: " <<  sizeOfBitmap << ". Check w & h (w*(h/8):" << w << " " << h << std::endl;
-		return false;
+		std::cout<< "Error drawBitmap 4: Bitmap size is incorrect: " <<  sizeOfBitmap << ". Check w & h (w*(h/8):" << w << " " << h << std::endl;
+		return LCD_BitmapSize;
 	}
 
 	// Vertical byte bitmaps
@@ -819,133 +810,149 @@ bool NOKIA_5110_graphics::drawBitmap(uint16_t x, uint16_t y, const uint8_t *bitm
 		}
 	}
 
-	return true;
+	return LCD_Success;
 }
 
 /*!
 	@brief  Set the font number
-	@param  FontNumber LCDFontType_e  enum , fontnumber 1-10
+	@param  FontNumber LCDFont_e  enum , fontnumber 1-12
 */
 void NOKIA_5110_graphics::SetFontNum(LCDFontType_e FontNumber) {
 
 	_FontNumber = FontNumber;
 
 	switch (_FontNumber) {
-	case LCDFontType_Default:  // Norm default 5 by 8
+	case LCDFont_Default:  // Norm default 5 by 8
 		_CurrentFontWidth = LCDFontWidth_5;
 		_CurrentFontoffset =  LCDFontOffset_Extend;
 		_CurrentFontheight = LCDFontHeight_8;
 		_CurrentFontLength = LCDFontLenAll;
 	break;
-	case LCDFontType_Thick: // Thick 7 by 8 (NO LOWERCASE LETTERS)
+	case LCDFont_Thick: // Thick 7 by 8 (NO LOWERCASE LETTERS)
 		_CurrentFontWidth = LCDFontWidth_7;
 		_CurrentFontoffset = LCDFontOffset_Space;
 		_CurrentFontheight = LCDFontHeight_8;
 		_CurrentFontLength = LCDFontLenAlphaNumNoLCase;
 	break;
-	case LCDFontType_SevenSeg:  // Seven segment 4 by 8
+	case LCDFont_SevenSeg:  // Seven segment 4 by 8
 		_CurrentFontWidth = LCDFontWidth_4;
 		_CurrentFontoffset = LCDFontOffset_Space;
 		_CurrentFontheight = LCDFontHeight_8;
 		_CurrentFontLength = LCDFontLenAlphaNum;
 	break;
-	case LCDFontType_Wide : // Wide  8 by 8 (NO LOWERCASE LETTERS)
+	case LCDFont_Wide : // Wide  8 by 8 (NO LOWERCASE LETTERS)
 		_CurrentFontWidth = LCDFontWidth_8;
 		_CurrentFontoffset = LCDFontOffset_Space;
 		_CurrentFontheight = LCDFontHeight_8;
 		_CurrentFontLength = LCDFontLenAlphaNumNoLCase;
 	break;
-	case LCDFontType_Tiny:  // tiny 3 by 8
+	case LCDFont_Tiny:  // tiny 3 by 8
 		_CurrentFontWidth = LCDFontWidth_3;
 		_CurrentFontoffset =  LCDFontOffset_Space;
 		_CurrentFontheight = LCDFontHeight_8;
 		_CurrentFontLength = LCDFontLenAlphaNum;
 	break;
-	case LCDFontType_Homespun: // homespun 7 by 8
+	case LCDFont_Homespun: // homespun 7 by 8
 		_CurrentFontWidth = LCDFontWidth_7;
 		_CurrentFontoffset = LCDFontOffset_Space;
 		_CurrentFontheight = LCDFontHeight_8;
 		_CurrentFontLength = LCDFontLenAlphaNum;
 	break;
-	case LCDFontType_Bignum : // big nums 16 by 32 (NUMBERS + : only)
+	case LCDFont_Bignum : // big nums 16 by 32 (NUMBERS)
 		_CurrentFontWidth = LCDFontWidth_16;
 		_CurrentFontoffset = LCDFontOffset_Minus;
 		_CurrentFontheight = LCDFontHeight_32;
 		_CurrentFontLength = LCDFontLenNumeric;
 	break;
-	case LCDFontType_Mednum: // med nums 16 by 16 (NUMBERS + : only)
+	case LCDFont_Mednum: // med nums 16 by 16 (NUMBERS)
 		_CurrentFontWidth = LCDFontWidth_16;
 		_CurrentFontoffset =  LCDFontOffset_Minus;
 		_CurrentFontheight = LCDFontHeight_16;
 		_CurrentFontLength = LCDFontLenNumeric;
 	break;
-	case LCDFontType_ArialRound: // Arial round 16 by 24
+	case LCDFont_ArialRound: // Arial round 16 by 24
 		_CurrentFontWidth = LCDFontWidth_16;
 		_CurrentFontoffset = LCDFontOffset_Space;
 		_CurrentFontheight = LCDFontHeight_24;
 		_CurrentFontLength = LCDFontLenAlphaNum;
 	break;
-	case LCDFontType_ArialBold: // Arial bold  16 by 16
+	case LCDFont_ArialBold: // Arial bold  16 by 16
 		_CurrentFontWidth = LCDFontWidth_16;
 		_CurrentFontoffset = LCDFontOffset_Space;
 		_CurrentFontheight = LCDFontHeight_16;
+		_CurrentFontLength = LCDFontLenAlphaNum;
+	break;
+	case LCDFont_Mia: // mia  8 by 16
+		_CurrentFontWidth = LCDFontWidth_8;
+		_CurrentFontoffset = LCDFontOffset_Space;
+		_CurrentFontheight = LCDFontHeight_16;
+		_CurrentFontLength = LCDFontLenAlphaNum;
+	break;
+	case LCDFont_Dedica: // dedica  6 by 12
+		_CurrentFontWidth = LCDFontWidth_6;
+		_CurrentFontoffset = LCDFontOffset_Space;
+		_CurrentFontheight = LCDFontHeight_12;
 		_CurrentFontLength = LCDFontLenAlphaNum;
 	break;
 	default: // if wrong font num passed in,  set to default
 		_CurrentFontWidth = LCDFontWidth_5;
 		_CurrentFontoffset =  LCDFontOffset_Extend;
 		_CurrentFontheight = LCDFontHeight_8;
-		_FontNumber = LCDFontType_Default;
+		_FontNumber = LCDFont_Default;
 		_CurrentFontLength = LCDFontLenAll;
 	break;
 	}
 }
 
 /*!
-	@brief Writes text string (*ptext) on the LCD
+	@brief Writes text string (*pText) on the Display
 	@param x x-co-ord start
 	@param y y-co-ord start
 	@param pText pointer to character array
 	@param color foreground
 	@param bg background color
 	@param size Desired text size. 1 is default 6x8, 2 is 12x16, 3 is 18x24, etc
+	@return LCD_Return_Codes_e
 	@note for font 1- 6 only
 */
-bool NOKIA_5110_graphics::drawText(uint8_t x, uint8_t y, char* pText, uint8_t color, uint8_t bg, uint8_t size) {
+LCD_Return_Codes_e  NOKIA_5110_graphics::drawText(uint8_t x, uint8_t y, char* pText, uint8_t color, uint8_t bg, uint8_t size) {
 
 	// check Correct font number
-	if (_FontNumber >= LCDFontType_Bignum)
+	if (_FontNumber >= LCDFont_Bignum)
 	{
 		std::cout<< "Error drawText 1: Wrong font number , must be 1-6" << std::endl;
-		return false;
+		return LCD_WrongFont;
 	}
 	// Check for null pointer
 	if(pText == nullptr)
 	{
-		std::cout<< "Error drawText 2 :String array is not valid pointer" << std::endl;
-		return false;
+		std::cout<< "Error drawText 2: String array is not valid pointer" << std::endl;
+		return LCD_CharArrayNullptr;
 	}
-	uint8_t cursorX = x;
-	uint8_t cursorY = y;
+	LCD_Return_Codes_e DrawCharReturnCode;
+	uint8_t lcursorX = x;
+	uint8_t lcursorY = y;
 
 	while (*pText != '\0')
 	{
-		if (_textWrap  && ((_cursorX + size * _CurrentFontWidth) > _width))
+		if (_textWrap  && ((lcursorX + size * _CurrentFontWidth) > _width))
 		{
-			cursorX = 0;
-			cursorY = cursorY + size * 7 + 3;
-			if (cursorY > _height) cursorY = _height;
+			lcursorX = 0;
+			lcursorY = lcursorY + size * 7 + 3;
+			if (lcursorY > _height) lcursorY = _height;
 		}
-		if(!drawChar(cursorX, cursorY, *pText, color, bg, size))
+		DrawCharReturnCode = drawChar(lcursorX, lcursorY, *pText, color, bg, size);
+		
+		if (DrawCharReturnCode != LCD_Success)
 		{
 			std::cout<< "Error drawText 3: Method drawChar failed" << std::endl;
-			return false;
+			return DrawCharReturnCode;
 		}
-		_cursorX = cursorX + size * (_CurrentFontWidth + 1);
-		if (cursorX > _width) cursorX = _width;
+		lcursorX = lcursorX + size * (_CurrentFontWidth + 1);
+		if (lcursorX > _width) lcursorX = _width;
 		pText++;
 	}
-	return true;
+	return LCD_Success;
 }
 
 /*!
@@ -955,22 +962,35 @@ bool NOKIA_5110_graphics::drawText(uint8_t x, uint8_t y, char* pText, uint8_t co
 	@param character The ASCII character
 	@param color foreground color
 	@param bg background color
-	@note for font 7-10 only
+	@return LCD_Return_Codes_e
+	@note for font 7-12 only
 */
-bool NOKIA_5110_graphics::drawCharBigFont(uint8_t x, uint8_t y, uint8_t character, uint8_t color , uint8_t bg)
+LCD_Return_Codes_e NOKIA_5110_graphics::drawChar(uint8_t x, uint8_t y, uint8_t character, uint8_t color , uint8_t bg)
 {
+	uint8_t FontSizeMod = 0;
 	// Check user input
 	// 1. Check for wrong font
-	if (_FontNumber < LCDFontType_Bignum)
+	switch (_FontNumber)
 	{
-		std::cout<< "Error drawCharBigFont 1 : Wrong font selected, must be font 7-10"<< std::endl;
-		return false;
+		case LCDFont_Bignum:
+		case LCDFont_Mednum:
+		case LCDFont_ArialRound:
+		case LCDFont_ArialBold:
+			FontSizeMod  = 2;
+		break;
+		case LCDFont_Mia:
+		case LCDFont_Dedica:
+			FontSizeMod  = 1;
+		break;
+		default:
+			return LCD_WrongFont;
+		break;
 	}
 	// 2. Check for character out of font bounds
 	if ( character < _CurrentFontoffset || character >= (_CurrentFontLength+ _CurrentFontoffset))
 	{
-		std::cout<< "Error drawCharBigFont 2: Character out of Font bounds " << character << " " <<+_CurrentFontoffset  <<  +(_CurrentFontLength + _CurrentFontoffset) << std::endl;
-		return false;
+		std::cout<< "Error drawChar 2: Character out of Font bounds " << character << " " <<+_CurrentFontoffset  <<  +(_CurrentFontLength + _CurrentFontoffset) << std::endl;
+		return LCD_CharFontASCIIRange;
 	}
 	// 3. Check for screen out of  bounds
 	if((x >= _width)            || // Clip right
@@ -978,24 +998,28 @@ bool NOKIA_5110_graphics::drawCharBigFont(uint8_t x, uint8_t y, uint8_t characte
 	((x + _CurrentFontWidth+1) < 0) || // Clip left
 	((y + _CurrentFontheight) < 0))   // Clip top
 	{
-		std::cout<< "Error drawCharBigFont 3: Co-ordinates out of bounds " << std::endl;
-		return false;
+		std::cout<< "Error drawChar 3: Co-ordinates out of bounds " << std::endl;
+		return LCD_CharScreenBounds;
 	}
 
-	uint8_t i, j;
-	uint8_t ctemp = 0, y0 = y;
+	uint8_t i = 0;
+	uint8_t j = 0;
+	uint8_t ctemp = 0;
+	uint8_t y0 = y;
 
-	for (i = 0; i < (_CurrentFontheight*2); i++)
+	for (i = 0; i < (_CurrentFontheight*FontSizeMod); i++)
 	{
 		switch (_FontNumber)
 		{
-			case LCDFontType_Bignum: ctemp = pFontBigNumptr[character - _CurrentFontoffset][i]; break;
-			case LCDFontType_Mednum: ctemp = pFontMedNumptr[character - _CurrentFontoffset][i]; break;
-			case LCDFontType_ArialRound: ctemp = pFontArial16x24ptr[character - _CurrentFontoffset][i]; break;
-			case LCDFontType_ArialBold: ctemp = pFontArial16x16ptr[character - _CurrentFontoffset][i]; break;
+			case LCDFont_Bignum: ctemp = pFontBigNumptr[character - _CurrentFontoffset][i]; break;
+			case LCDFont_Mednum: ctemp = pFontMedNumptr[character - _CurrentFontoffset][i]; break;
+			case LCDFont_ArialRound: ctemp = pFontArial16x24ptr[character - _CurrentFontoffset][i]; break;
+			case LCDFont_ArialBold: ctemp = pFontArial16x16ptr[character - _CurrentFontoffset][i]; break;
+			case LCDFont_Mia: ctemp = pFontMia8x16ptr[character - _CurrentFontoffset][i]; break;
+			case LCDFont_Dedica: ctemp = pFontDedica8x12ptr[character - _CurrentFontoffset][i]; break;
 			default :
-				std::cout<< "Error drawCharBigFont 4 :Wrong font selected, must be font 7-10"<< std::endl;
-				return false;
+				std::cout<< "Error drawChar 4: Wrong font selected, must be font 7-12"<< std::endl;
+				return LCD_WrongFont;
 			break;
 		}
 
@@ -1007,7 +1031,6 @@ bool NOKIA_5110_graphics::drawCharBigFont(uint8_t x, uint8_t y, uint8_t characte
 			} else {
 				LCDDrawPixel(x, y, bg);
 			}
-
 			ctemp <<= 1;
 			y++;
 			if ((y - y0) == _CurrentFontheight)
@@ -1018,34 +1041,35 @@ bool NOKIA_5110_graphics::drawCharBigFont(uint8_t x, uint8_t y, uint8_t characte
 			}
 		}
 	}
-	return true;
+	return LCD_Success;
 }
 
 /*!
-	@brief Writes text string (*ptext) on the TFT
+	@brief Writes text string (*pText) on the Display
 	@param  x   Bottom left corner x coordinate
 	@param  y   Bottom left corner y coordinate
 	@param pText pointer to character array
 	@param color foreground color
 	@param bg background color
-	@note for font 7 -10  only
+	@return LCD_Return_Codes_e
+	@note for font 7 -12  only
 */
-bool NOKIA_5110_graphics::drawTextBigFont(uint8_t x, uint8_t y, char* pText, uint8_t color, uint8_t bg)
+LCD_Return_Codes_e NOKIA_5110_graphics::drawText(uint8_t x, uint8_t y, char* pText, uint8_t color, uint8_t bg)
 {
 	// Check correct font number
-	if (_FontNumber < LCDFontType_Bignum)
+	if (_FontNumber < LCDFont_Bignum)
 	{
-		std::cout<< "Error drawTextBigFont 1: Wrong font selected, must be > font 7 " << std::endl;
-		return false;
+		std::cout<< "Error drawText 1: Wrong font selected, must be > font 7 " << std::endl;
+		return LCD_WrongFont;
 	}
 
 	// Check for null pointer
 	if(pText == nullptr)
 	{
-		std::cout<< "Error drawTextBigFont 2 :String array is not valid pointer" << std::endl;
-		return false;
+		std::cout<< "Error drawText 2 :String array is not valid pointer" << std::endl;
+		return LCD_CharArrayNullptr;
 	}
-
+	LCD_Return_Codes_e DrawCharReturnCode;
 	while (*pText != '\0')
 	{
 	if (x > (_width - _CurrentFontWidth ))
@@ -1057,16 +1081,43 @@ bool NOKIA_5110_graphics::drawTextBigFont(uint8_t x, uint8_t y, char* pText, uin
 			y = x = 0;
 		}
 	}
-
-	if(!drawCharBigFont(x, y, *pText, color, bg))
+	DrawCharReturnCode = drawChar(x, y, *pText, color, bg);
+	if(DrawCharReturnCode  != LCD_Success)
 	{
-		std::cout<< "Error drawTextBigFont 3: Method drawChar failed" << std::endl;
-		return false;
+		std::cout<< "Error drawText 3: Method drawChar failed" << std::endl;
+		return DrawCharReturnCode;
 	}
 	x += _CurrentFontWidth ;
 	pText++;
 	}
-	return true;
+	return LCD_Success;
 }
+
+/*!
+	@brief  set rotation setting for LCDdisplayUpdate
+	@param  mode enum LCD_rotate_e 0 thru 3 corresponding to 4 rotations:
+*/
+void NOKIA_5110_graphics::setRotation(LCD_rotate_e CurrentRotation) {
+
+	switch(CurrentRotation) {
+	case LCD_Degrees_0:
+	case LCD_Degrees_180:
+		_width  = LCDWIDTH;
+		_height = LCDHEIGHT;
+	break;
+	case LCD_Degrees_90:
+	case LCD_Degrees_270:
+		_width  = LCDHEIGHT;
+		_height = LCDWIDTH;
+	break;
+	}
+	_LCD_rotate = CurrentRotation;
+}
+
+/*!
+	@brief     Get rotation setting for display
+	@returns   0 thru 3 corresponding to 4 cardinal rotations
+*/
+LCD_rotate_e NOKIA_5110_graphics::getRotation(void) {return _LCD_rotate;}
 
 // ** EOF **

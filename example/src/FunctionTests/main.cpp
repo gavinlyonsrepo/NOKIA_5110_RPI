@@ -7,7 +7,7 @@
 	@test
 		-# Test 301 fill + clear screen
 		-# Test 302 Sleep
-		-# Test 303 Rotation 
+		-# Test 303 Rotation
 		-# Test 304 invert screen command
 */
 
@@ -50,7 +50,7 @@ void testInvert(void);
 
 int main(int argc, char **argv)
 {
-	Setup(); 
+	if(!Setup()) return -1;
 
 	testFillScreen();
 	testSleepMode();
@@ -80,6 +80,7 @@ bool Setup(void)
 	if(!myLCD.LCDBegin(inverse, contrast, bias))
 	{
 		std::cout<< "Error 1202: Setup : bcm2835_spi_begin :Cannot start spi, Running as root?" << std::endl;
+		bcm2835_close(); // Close the bcm2835 library
 		return false;
 	}
 	std::cout<< "Nokia 5110 library version : " << myLCD.LCDLibVerNumGet() << std::endl;
@@ -96,22 +97,22 @@ void EndTests(void)
 }
 
 void testSleepMode(void) {
-	
+
 	std::cout <<"Test 302 Sleep mode" << std::endl;
 	char testStr1[]= "Sleep 5 secs!\r\n";
 	char testStr2[]= "Awake!\r\n";
-	
+
 	myLCD.LCDdisplayClear();
 	myLCD.setCursor(0, 0);
 	myLCD.setTextSize(1);
 	myLCD.print(testStr1);
 	myLCD.LCDdisplayUpdate();
-	
+
 	bcm2835_delay(TEST_DELAY2);
 	myLCD.LCDenableSleep();
 	bcm2835_delay(TEST_DELAY5);
 	myLCD.LCDdisableSleep();
-	
+
 	myLCD.print(testStr2);
 	myLCD.LCDdisplayUpdate();
 	bcm2835_delay(TEST_DELAY2);
@@ -120,43 +121,40 @@ void testSleepMode(void) {
 
 
 void testRotate(void) {
-	
+
 	std::cout <<"Test 303 rotate mode" << std::endl;
 	char testStr0[]= "Rotate 0\r\n";
 	char testStr1[]= "Rotate 90\r\n";
 	char testStr2[]= "Rotate 180\r\n";
 	char testStr3[]= "Rotate 270\r\n";
-	
-	// rotation example 
+
+	// rotation example
 	myLCD.LCDdisplayClear();
 	myLCD.setTextSize(1);
-	myLCD.SetFontNum(LCDFontType_Tiny); //tiny
+	myLCD.SetFontNum(LCDFont_Tiny); 
 	myLCD.setTextColor(LCD_BLACK, LCD_WHITE);
 	myLCD.setCursor(0, 0);
-	
-	myLCD.LCDsetRotation(LCD_Degrees_90); // rotate 90 degrees counter clockwise,
-	myLCD.LCDdisplayClear();
+
+	myLCD.setRotation(LCD_Degrees_90); // rotate 90 degrees counter clockwise,
+	myLCD.setCursor(0, 0);
 	myLCD.print(testStr1);
-	
 	screenReset();
-	
-	myLCD.LCDsetRotation(LCD_Degrees_180); // rotate 180 degrees counter clockwise,
-	myLCD.LCDdisplayClear();
+
+	myLCD.setRotation(LCD_Degrees_180); // rotate 180 degrees counter clockwise,
+	myLCD.setCursor(0, 0);
 	myLCD.print(testStr2);
-	
 	screenReset();
-	
-	myLCD.LCDsetRotation(LCD_Degrees_270); // rotate 180 degrees counter clockwise,
-	myLCD.LCDdisplayClear();
+
+	myLCD.setRotation(LCD_Degrees_270); // rotate 270 degrees counter clockwise,
+	myLCD.setCursor(0, 0);
 	myLCD.print(testStr3);
-	
 	screenReset();
-	
+
 	// revert back to no rotation
-	myLCD.LCDsetRotation(LCD_Degrees_0);
-	myLCD.LCDdisplayClear();
+	myLCD.setRotation(LCD_Degrees_0);
+	myLCD.setCursor(0, 0);
 	myLCD.print(testStr0);
-	
+
 	screenReset();
 }
 
@@ -178,14 +176,14 @@ void screenReset(void) {
 void testInvert(void)
 {
 	std::cout <<"Test 304 invert screen command" << std::endl;
-	
+
 	screenReset();
-	myLCD.SetFontNum(LCDFontType_Default);
+	myLCD.SetFontNum(LCDFont_Default);
 	myLCD.setTextSize(2);
 	myLCD.setCursor(5, 5);
 	myLCD.print("INVERT 123");
 	screenReset();
-	
+
 	// Invert the display
 	myLCD.LCDinvertDisplay(true);
 	bcm2835_delay(TEST_DELAY5);

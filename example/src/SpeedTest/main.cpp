@@ -79,6 +79,7 @@ bool Setup(void)
 	if(!myLCD.LCDBegin(inverse, contrast, bias))
 	{
 		std::cout<< "Error 1202: bcm2835_spi_begin :Cannot start spi, Running as root?" << std::endl;
+		bcm2835_close(); // Close the bcm2835 library
 		return false;
 	}
 	std::cout<< "Nokia 5110 library version : " << myLCD.LCDLibVerNumGet() << std::endl;
@@ -98,13 +99,13 @@ void EndTests(void)
 
 void myLoop() {
 
-		while (count < 10000)
-		{
-			static long framerate = 0;
-			display_buffer(framerate, count);
-			framerate++;
-			count++;
-		}
+	while (count < 10000)
+	{
+		static long framerate = 0;
+		display_buffer(framerate, count);
+		framerate++;
+		count++;
+	}
 
 }
 
@@ -123,7 +124,8 @@ void display_buffer(long currentFramerate, int count)
 		colour = !colour;
 	}
 	
-	// ** Code to speed test here **
+	// *****
+	// Code to speed test here
 	myLCD.LCDdisplayClear();
 	myLCD.setCursor(0, 0);
 	myLCD.print("Nokia");
@@ -142,7 +144,7 @@ void display_buffer(long currentFramerate, int count)
 
 	myLCD.fillRect(60, 1, 20, 20, colour);
 	myLCD.fillCircle(60, 35, 10, !colour);
-
+	// *****
 	myLCD.LCDdisplayUpdate();
 }
 

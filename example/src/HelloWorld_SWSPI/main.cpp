@@ -80,7 +80,7 @@ void Test(void)
 {
 	std::cout<< "Nokia 5110 Software SPI, Hello World Test " << std::endl;
 	char testStr[]= "Hello World   SWSPI";
-	myLCD.SetFontNum(LCDFontType_Default);
+	myLCD.SetFontNum(LCDFont_Default);
 	myLCD.setTextSize(1);
 	myLCD.setCursor(0, 0);
 	myLCD.print(testStr);

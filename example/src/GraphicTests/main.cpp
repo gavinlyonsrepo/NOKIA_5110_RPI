@@ -5,9 +5,9 @@
 	@author Gavin Lyons.
 	@details https://github.com/gavinlyonsrepo/NOKIA_5110_RPI
 	@test
-		-# Test 202 draw pixel
+		-# Test 202 Draw pixel
 		-# Test 203 Draw lines
-		-# Test 204 draw shapes
+		-# Test 204 Draw shapes
 */
 
 
@@ -55,7 +55,7 @@ void testFillRoundRect(void);
 
 int main(int argc, char **argv)
 {
-	Setup(); 
+	if(!Setup()) return -1; 
 
 	myLCD.LCDfillScreenPattern(0x31); // Splash screen
 	screenReset();
@@ -96,6 +96,7 @@ bool Setup(void)
 	if(!myLCD.LCDBegin(inverse, contrast, bias))
 	{
 		std::cout<< "Error 1202: Setup : bcm2835_spi_begin :Cannot start spi, Running as root?" << std::endl;
+		bcm2835_close(); // Close the bcm2835 library
 		return false;
 	}
 	std::cout<< "Nokia 5110 library version : " << myLCD.LCDLibVerNumGet() << std::endl;
@@ -112,7 +113,7 @@ void EndTests(void)
 }
 
 void textDrawPixel(void) {
-	std::cout <<"Test 201 Draw pixels" << std::endl;
+	std::cout <<"Test 202 Draw pixels" << std::endl;
 	myLCD.LCDDrawPixel(2, 5, LCD_BLACK);
 	myLCD.LCDDrawPixel(10, 10, LCD_BLACK);
 	myLCD.LCDDrawPixel(20, 20, LCD_BLACK);
@@ -167,7 +168,7 @@ void testDrawRect(void) {
 
 void testDrawLine(void) {
 
-	std::cout <<"Test 202 Draw lines" << std::endl;
+	std::cout <<"Test 203 Draw lines" << std::endl;
 	myLCD.drawLine(0, 0, 40, 20, LCD_BLACK);
 	myLCD.drawHLine(50, 20, 10 , LCD_BLACK); 
 	myLCD.drawVLine(70, 20 ,10, LCD_BLACK); 

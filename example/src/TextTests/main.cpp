@@ -7,8 +7,9 @@
 	@test
 		-# Test 111 draw ASCII font , drawchar +  drawtext methods
 		-# Test 112 fonts 1-6
-		-# Test 113 fonts 7-10
+		-# Test 113 fonts 7-12
 		-# Test 114 Print method
+		-# Test 115 Error Check
 */
 
 
@@ -46,12 +47,14 @@ void testTextModes(void);
 void testFonts_1_6(void);
 void testFonts_7_8(void);
 void testFonts_9_10(void);
+void testFonts_11_12(void);
+void testErrorCheck(void);
 
 // ************  MAIN ***************
 
 int main(int argc, char **argv)
 {
-	Setup();
+	if(!Setup()) return -1;
 
 	myLCD.LCDfillScreenPattern(0x31); // Splash screen
 	screenReset();
@@ -60,7 +63,9 @@ int main(int argc, char **argv)
 	testFonts_1_6();
 	testFonts_7_8();
 	testFonts_9_10();
+	testFonts_11_12();
 	testTextModes();
+	testErrorCheck();
 
 	EndTests();
 	return 0;
@@ -85,6 +90,7 @@ bool Setup(void)
 	if(!myLCD.LCDBegin(inverse, contrast, bias))
 	{
 		std::cout<< "Error 1202: Setup : bcm2835_spi_begin :Cannot start spi, Running as root?" << std::endl;
+		bcm2835_close(); // Close the bcm2835 library
 		return false;
 	}
 	std::cout<< "Nokia 5110 library version : " << myLCD.LCDLibVerNumGet() << std::endl;
@@ -117,7 +123,7 @@ void testFonts_1_6(void)
 	char testStr12[]= "Homespun";
 
 	// default font 1
-	myLCD.SetFontNum(LCDFontType_Default);
+	myLCD.SetFontNum(LCDFont_Default);
 	myLCD.setTextSize(1);
 	myLCD.setCursor(0, 0);
 	myLCD.print(testStr1);
@@ -132,7 +138,7 @@ void testFonts_1_6(void)
 	// THICK font 2
 	myLCD.setCursor(0, 0);
 	myLCD.setTextSize(1);
-	myLCD.SetFontNum(LCDFontType_Thick);
+	myLCD.SetFontNum(LCDFont_Thick);
 	myLCD.print(testStr4);
 	myLCD.setTextSize(2);
 	myLCD.setCursor(10, 20);
@@ -140,7 +146,7 @@ void testFonts_1_6(void)
 	screenReset();
 
 	// Seven seg font 3
-	myLCD.SetFontNum(LCDFontType_SevenSeg);
+	myLCD.SetFontNum(LCDFont_SevenSeg);
 	myLCD.setTextSize(1);
 	myLCD.setCursor(0, 12);
 	myLCD.print(testStr6);
@@ -150,7 +156,7 @@ void testFonts_1_6(void)
 	screenReset();
 
 	// WIDE  font 4
-	myLCD.SetFontNum(LCDFontType_Wide);
+	myLCD.SetFontNum(LCDFont_Wide);
 	myLCD.setTextSize(1);
 	myLCD.setCursor(0, 0);
 	myLCD.print(testStr8);
@@ -160,7 +166,7 @@ void testFonts_1_6(void)
 	screenReset();
 
 	//tiny font 5
-	myLCD.SetFontNum(LCDFontType_Tiny);
+	myLCD.SetFontNum(LCDFont_Tiny);
 	myLCD.setTextSize(1);
 	myLCD.setCursor(0, 0);
 	myLCD.print(testStr10);
@@ -170,7 +176,7 @@ void testFonts_1_6(void)
 	screenReset();
 
 	//homespun font 6
-	myLCD.SetFontNum(LCDFontType_Homespun);
+	myLCD.SetFontNum(LCDFont_Homespun);
 	myLCD.setTextSize(1);
 	myLCD.setCursor(0, 0);
 	myLCD.print(testStr12);
@@ -180,7 +186,7 @@ void testFonts_1_6(void)
 	screenReset();
 
 	myLCD.setTextSize(1);
-	myLCD.SetFontNum(LCDFontType_Default);
+	myLCD.SetFontNum(LCDFont_Default);
 	myLCD.setCursor(0, 0);
 }
 
@@ -192,13 +198,13 @@ void testTextModes(void) {
 	char testStr1[]= "Hello World!\r\n";
 	char testStr2[]= "0xABCD";
 	char testStr3[]= "20:37\r\n";
-	char testStr4[]= "TEXT WRAP 123.\r\n";
+	char testStr4[]= "TEXTWRAP123.\r\n";
 	
 	// text display tests
 
 
 	myLCD.setTextSize(1);
-	myLCD.SetFontNum(LCDFontType_Default);
+	myLCD.SetFontNum(LCDFont_Default);
 	myLCD.setTextColor(LCD_WHITE, LCD_BLACK); // 'inverted' text
 	myLCD.setCursor(0, 0);
 	myLCD.print(testStr1);
@@ -212,7 +218,7 @@ void testTextModes(void) {
 	// Numbers
 	myLCD.setCursor(0, 0);
 	myLCD.setTextSize(1);
-	myLCD.SetFontNum(LCDFontType_Wide);
+	myLCD.SetFontNum(LCDFont_Wide);
 	myLCD.print(testStr3);
 	myLCD.print(-14790);
 	myLCD.setCursor(0, 26);
@@ -288,9 +294,9 @@ void testDrawChar(void) {
 
 	// Test Draw Text
 	char myString1[9] = {'1', '2', ':', '1', '3', ':', '2', '9'};
-	myLCD.SetFontNum(LCDFontType_Tiny);
+	myLCD.SetFontNum(LCDFont_Tiny);
 	myLCD.drawText(0,0, myString1, LCD_WHITE, LCD_BLACK,1);
-	myLCD.SetFontNum(LCDFontType_Wide);
+	myLCD.SetFontNum(LCDFont_Wide);
 	myLCD.drawText(0,32, myString1, LCD_BLACK, LCD_WHITE,1);
 
 	screenReset();
@@ -313,9 +319,9 @@ void testFonts_7_8(void)
 	myLCD.setTextColor(LCD_BLACK, LCD_WHITE);
 
 	// Font 7
-	myLCD.SetFontNum(LCDFontType_Bignum);
-	myLCD.drawCharBigFont(0, 0, '7', LCD_WHITE, LCD_BLACK); // print 7 single character
-	myLCD.drawTextBigFont(20, 0, mytest, LCD_BLACK, LCD_WHITE); // Print 23 inverted
+	myLCD.SetFontNum(LCDFont_Bignum);
+	myLCD.drawChar(0, 0, '7', LCD_WHITE, LCD_BLACK); // print 7 single character
+	myLCD.drawText(20, 0, mytest, LCD_BLACK, LCD_WHITE); // Print 23 inverted
 	screenReset();
 
 	// Font 7 with print method
@@ -328,9 +334,9 @@ void testFonts_7_8(void)
 	screenReset();
 	
 	// Font 8 
-	myLCD.SetFontNum(LCDFontType_Mednum);
-	myLCD.drawCharBigFont(0, 0, '8', LCD_WHITE, LCD_BLACK); // single character inverted
-	myLCD.drawTextBigFont(20, 0, mytest, LCD_BLACK, LCD_WHITE); // print 23
+	myLCD.SetFontNum(LCDFont_Mednum);
+	myLCD.drawChar(0, 0, '8', LCD_WHITE, LCD_BLACK); // single character inverted
+	myLCD.drawText(20, 0, mytest, LCD_BLACK, LCD_WHITE); // print 23
 	screenReset();
 
 	// Font 8 with print method
@@ -354,9 +360,9 @@ void testFonts_9_10(void)
 	myLCD.setTextColor(LCD_BLACK, LCD_WHITE);
 
 	// Font 9 
-	myLCD.SetFontNum(LCDFontType_ArialRound);
-	myLCD.drawCharBigFont(0, 0, 'A', LCD_WHITE, LCD_BLACK); // print A single character
-	myLCD.drawTextBigFont(20, 0, mytest2, LCD_BLACK, LCD_WHITE); // Print BC inverted
+	myLCD.SetFontNum(LCDFont_ArialRound);
+	myLCD.drawChar(0, 0, 'A', LCD_WHITE, LCD_BLACK); // print A single character
+	myLCD.drawText(20, 0, mytest2, LCD_BLACK, LCD_WHITE); // Print BC inverted
 	screenReset();
 
 	// Font 9 with print method
@@ -369,9 +375,9 @@ void testFonts_9_10(void)
 	screenReset();
 
 	// Font 10
-	myLCD.SetFontNum(LCDFontType_ArialBold);
-	myLCD.drawCharBigFont(0, 0, 'A', LCD_WHITE, LCD_BLACK); // single character A inverted
-	myLCD.drawTextBigFont(20, 0, mytest2, LCD_BLACK, LCD_WHITE); // print BC
+	myLCD.SetFontNum(LCDFont_ArialBold);
+	myLCD.drawChar(0, 0, 'A', LCD_WHITE, LCD_BLACK); // single character A inverted
+	myLCD.drawText(20, 0, mytest2, LCD_BLACK, LCD_WHITE); // print BC
 	screenReset();
 
 	// Font 10 with print method
@@ -388,4 +394,84 @@ void testFonts_9_10(void)
 	screenReset();
 }
 
+void testFonts_11_12(void)
+{
+	std::cout << "Test 113-c test font 11 and 12 " << std::endl;
+	char mytest2[] = "BC";
+	myLCD.setTextColor(LCD_BLACK, LCD_WHITE);
+
+	// Font 11
+	myLCD.SetFontNum(LCDFont_Mia);
+	myLCD.drawChar(0, 0, 'M', LCD_WHITE, LCD_BLACK); // print M single character
+	myLCD.drawText(20, 0, mytest2, LCD_BLACK, LCD_WHITE); // Print BC inverted
+	screenReset();
+
+	// Font 11 with print method
+	myLCD.setCursor(0, 0);
+	myLCD.print(-8.3, 1); //print -8.3
+	screenReset();
+
+	myLCD.setCursor(0, 0);
+	myLCD.print("11:01"); 
+	screenReset();
+
+	// Font 12
+	myLCD.SetFontNum(LCDFont_Dedica);
+	myLCD.drawChar(0, 0, 'D', LCD_WHITE, LCD_BLACK); // single character D inverted
+	myLCD.drawText(20, 0, mytest2, LCD_BLACK, LCD_WHITE); // print BC
+	screenReset();
+
+	// Font 12 with print method
+	myLCD.setCursor(0, 0);
+	myLCD.print(3.888, 2); // prints 3.89
+	screenReset();
+
+	myLCD.setCursor(0, 0);
+	myLCD.print(-39.7,1);
+	myLCD.setCursor(0, 16);
+	myLCD.print("01/83");
+	myLCD.setCursor(0, 32);
+	myLCD.print("12:59");
+	screenReset();
+}
+
+void testErrorCheck(void)
+{
+		// Error checking
+	std::cout << "==== Test 115 Start Error checking ====" << std::endl;
+	char testlowercase[] = "A]ab";
+	char testNonNumExtend[] = "-1;A";
+	char teststr0[] = "123456789";
+	
+	//wrong font
+	myLCD.SetFontNum(LCDFont_Bignum);
+	myLCD.drawText(20, 5, teststr0, LCD_WHITE, LCD_BLACK, 1); //throw error
+	myLCD.SetFontNum(LCDFont_Wide);
+	myLCD.drawText(10, 5, teststr0, LCD_WHITE, LCD_BLACK);  //throw error
+	screenReset();
+	std::cout << "========" << std::endl;
+	// character out of font bounds
+	// wide & thick lower case + ]
+	myLCD.drawText(5,  5, testlowercase, LCD_WHITE, LCD_BLACK, 2); //throw wide font error
+	myLCD.SetFontNum(LCDFont_Thick);
+	myLCD.drawText(5, 25, testlowercase, LCD_WHITE, LCD_BLACK, 2); //throw thick font error
+	
+	// Numeric extended bounds ; , A errors
+	myLCD.SetFontNum(LCDFont_Bignum);
+	myLCD.drawText(0, 0, testNonNumExtend, LCD_WHITE, LCD_BLACK); //throw bignum font error
+	myLCD.SetFontNum(LCDFont_Mednum);
+	myLCD.drawText(0, 32, testNonNumExtend, LCD_WHITE, LCD_BLACK); //throw mednum font error
+	screenReset();
+	std::cout << "========" << std::endl;
+	// screen out of bounds
+	myLCD.SetFontNum(LCDFont_Default);
+	myLCD.drawChar(0, 100, 'e', LCD_WHITE, LCD_BLACK, 1); //throw error
+	myLCD.drawChar(100, 0, 'f', LCD_WHITE, LCD_BLACK, 1); //throw error
+	screenReset();
+	myLCD.SetFontNum(LCDFont_ArialBold);
+	myLCD.drawChar(0, 100, 'A', LCD_WHITE, LCD_BLACK); //throw error
+	myLCD.drawChar(100, 0, 'B', LCD_WHITE, LCD_BLACK); //throw error
+	screenReset();
+	std::cout << "==== Stop Error checking ====" << std::endl;
+}
 // *************** EOF ****************

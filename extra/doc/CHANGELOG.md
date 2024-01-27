@@ -16,5 +16,8 @@
 	* Added getters and setters for SW SPI communication GPIO delay
 	* SPI HW settings can now refreshed during the program and not just at start.
 	* Improved Error handling, including ASCII font character range detection.
+* version 1.4 Feb 2024
+	* Added Fonts 11 & 12
+	* Added enum for return code errors 
 
 
