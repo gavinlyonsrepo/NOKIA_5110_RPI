@@ -23,7 +23,7 @@
 0. C++ Library for Nokia 5110 LCD, PCD8544 Driver. 84 x 48 pixels.
 1. Dynamic install-able Raspberry Pi C++ library.
 2. Invert colour, rotate, sleep, contrast bias control supported.
-3. 10 fonts.
+3. 12 fonts.
 4. Graphics class included.
 5. Polymorphic print class included.
 6. Bitmaps supported.
@@ -191,7 +191,7 @@ Font Methods:
 | 7-12 | drawText|N| draws character array |
 | 1-12 | print | Polymorphic print class which will print out many data types |
 
-These methods returnn a enum( LCD_Return_Codes_e), non-zero in event of an error, see API doc., such as wrong font chosen , ASCII character outside
+These methods return an enum( LCD_Return_Codes_e), non-zero in event of an error (see API doc). Such as wrong font chosen , ASCII character outside
 chosen fonts range, character out of screen bounds and invalid character array pointer object.
 
 ### Bitmap

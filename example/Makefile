@@ -11,9 +11,9 @@
 # Pick one example "SRC" dir path and ONE ONLY.
 # Comment out the other's . 
 
-SRC=src/HelloWorld
+#SRC=src/HelloWorld
 #SRC=src/HelloWorld_SWSPI
-#SRC=src/TextTests
+SRC=src/TextTests
 #SRC=src/GraphicTests
 #SRC=src/FunctionTests
 #SRC=src/BitmapTests
@@ -23,7 +23,7 @@ SRC=src/HelloWorld
 
 CC=g++
 LDFLAGS= -lbcm2835 -lNOKIA_5110_RPI
-CFLAGS = -Iinclude/  -c -Wall 
+CFLAGS = -Iinclude/  -c -Wall -Wextra 
 MD=mkdir
 OBJ=obj
 SRCS = $(wildcard $(SRC)/*.cpp)

@@ -47,7 +47,7 @@ NOKIA_5110_RPI: $(OBJS)
 
 # Library parts
 $(OBJ)/%.o: $(SRC)/%.cpp
-	$(CC) -Wall -fPIC -c $(CFLAGS) $< -o $@
+	$(CC) -Wall -Wextra -Wshadow -fPIC -c $(CFLAGS) $< -o $@
 
 # Install the library to LIBPATH
 install:
