@@ -8,7 +8,7 @@
   * [Test](#test)
   * [Hardware](#hardware)
   * [Software](#software)
- 	* [API](#api)
+	* [Tool chain](#tool-chain)
  	* [SPI](#spi)
  	* [File system](#file-system)
  	* [Fonts](#fonts)
@@ -32,16 +32,12 @@
 
 * Author: Gavin Lyons
 * Port of my PIC library at [github link.](https://github.com/gavinlyonsrepo/pic_18F47K42_projects)
-* Development Tool chain. 
-	1. Raspberry PI 3 model b
-	2. C++, g++ (Debian 12.2.0) 
-	3. Raspbian , Debian 12 bookworm OS, , 64 bit.
-	4. kernel : aarch64 Linux 6.1.0-rpi7-rpi-v8
-	5. [bcm2835 Library 1.71 dependency](http://www.airspayce.com/mikem/bcm2835/). Provides low level SPI bus, delays and GPIO control.
+
 
 ## See Also
 
-[Combined Display library 'Display_Lib_RPI'](https://github.com/gavinlyonsrepo/Display_Lib_RPI)
+The NOKIA_5110_RPI library has been amalgamated into my combined display library ['Display_Lib_RPI.'](https://github.com/gavinlyonsrepo/Display_Lib_RPI)
+This new library is under active development and should work on any Linux based single board computer.
 
 ## Installation
 
@@ -123,10 +119,14 @@ GND(pin8) and LIGHT(pin7) to switch on /off backlight and adjust brightness.
 
 ## Software
 
-### API
-
-The Software is commented mostly for"doxygen" and if users uses "doxygen" software
-an API HTML document can be generated. A Doxyfile is in doc sub folder in repository.
+### Tool chain
+ 
+	1. Raspberry PI 3 model b
+	2. C++, g++ (Debian 12.2.0) 
+	3. Raspbian , Debian 12 bookworm OS, , 64 bit.
+	4. kernel : aarch64 Linux 6.1.0-rpi7-rpi-v8
+	5. [bcm2835 Library 1.71 dependency](http://www.airspayce.com/mikem/bcm2835/). 
+		Provides low level SPI bus, delays and GPIO control.
 
 ### SPI
 
